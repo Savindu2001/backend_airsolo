@@ -2,7 +2,13 @@ const { Hostel } = require('../models');
 
 exports.createHostel = async (req, res) => {
     try {
-        const { hotelier_id, name, description, address, city, country, contact_number, email, website, rating, main_image, gallery } = req.body;
+        const { hotelier_id, name, description, address, city, country, contact_number, email, website, rating } = req.body;
+
+        // Check if main_image and gallery are set correctly
+        const galleryImages = req.body.gallery || []; // Ensure it's an array
+
+        console.log("Main Image URL: ", mainImage); // Debugging log
+        console.log("Gallery URLs: ", galleryImages); // Debugging log
 
         // Create the hostel
         const hostel = await Hostel.create({
@@ -16,8 +22,7 @@ exports.createHostel = async (req, res) => {
             email,
             website,
             rating,
-            main_image,
-            gallery,
+            gallery: galleryImages, // Ensure this is assigned correctly
         });
 
         return res.status(201).json({ message: 'Hostel created successfully', hostel });
@@ -26,6 +31,8 @@ exports.createHostel = async (req, res) => {
         return res.status(500).json({ message: 'An error occurred while creating the hostel', error: error.message });
     }
 };
+
+
 
 // Controller to get all hostels
 exports.getAllHostels = async (req, res) => {
