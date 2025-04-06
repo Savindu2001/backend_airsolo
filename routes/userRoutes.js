@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
+const userController = require('../controllers/userController'); // Ensure this path is correct
 
-// Define routes
+
 router.post('/', userController.createUser); // Create a new user
 router.get('/', userController.getAllUsers); // Get all users
 router.get('/:id', userController.getUserById); // Get a user by ID
