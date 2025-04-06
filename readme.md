@@ -183,3 +183,12 @@ backend_airsolo/
 ---
 
 Let me know if you want it customized for **hostel + hotel + transport + user modules** or converted into a public GitHub readme with badges and license.
+
+
+
+
+--- 
+
+when frontned design then should add 
+    google map,
+    google login

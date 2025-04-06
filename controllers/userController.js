@@ -1,5 +1,7 @@
 const { User } = require('../models'); // Import the User model
 const bcrypt = require('bcrypt'); // For password hashing
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const s3Client = new S3Client({ region: process.env.AWS_REGION }); // Adjust the S3 client as necessary
 
 // Controller to create a new user
 exports.createUser = async (req, res) => {
@@ -111,5 +113,65 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error('Error deleting user:', error);
         return res.status(500).json({ message: 'An error occurred while deleting the user', error });
+    }
+};
+
+// Controller to update user profile photo
+exports.updateProfilePhoto = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the user
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (req.file) {
+            user.profile_photo = req.file.location; 
+        }
+
+        await user.save(); 
+
+        return res.status(200).json({ message: 'Profile photo updated successfully', user });
+    } catch (error) {
+        console.error('Error updating profile photo:', error);
+        return res.status(500).json({ message: 'An error occurred while updating the profile photo', error });
+    }
+};
+
+// Controller to delete user profile photo
+exports.deleteProfilePhoto = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the user
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if the user has a profile photo to delete
+        if (!user.profile_photo) {
+            return res.status(404).json({ message: 'No profile photo to delete' });
+        }
+
+        // Delete from S3
+        const key = user.profile_photo.split('/').pop(); // Get the S3 key from the URL
+        const deleteParams = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: key,
+        };
+
+        await s3Client.send(new DeleteObjectCommand(deleteParams));
+
+        // Clear the profile photo field
+        user.profile_photo = null;
+        await user.save(); // Save the updated user
+
+        return res.status(200).json({ message: 'Profile photo deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting profile photo:', error);
+        return res.status(500).json({ message: 'An error occurred while deleting the profile photo', error });
     }
 };
