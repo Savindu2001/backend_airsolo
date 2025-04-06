@@ -8,6 +8,7 @@ const hostelRoutes = require('./routes/hostelRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const facilityRoutes = require('./routes/facilityRoutes');
 const houseRuleRoutes = require('./routes/houseRuleRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes');
 
 
 // Enable CORS for all routes
@@ -30,6 +31,7 @@ app.use('/api/hostels', hostelRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/house-rules', houseRuleRoutes);
+app.use('/api/vehicles', vehicleRoutes);
 
 // Server Setup
 const PORT = process.env.PORT || 3000; // Set the port, fallback to 3000 if not defined in .env
