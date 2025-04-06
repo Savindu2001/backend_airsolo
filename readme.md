@@ -12,3 +12,7 @@ npx sequelize-cli init
 
 # super access 
 `sudo lsof -i -P -n | grep LISTEN`
+
+
+
+npx sequelize-cli seed:generate --name demo-users

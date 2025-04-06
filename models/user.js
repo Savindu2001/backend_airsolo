@@ -1,29 +1,71 @@
-const { Sequelize, DataTypes } = require('sequelize'); // Add this line
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-module.exports = (sequelize) => {
-  const User = sequelize.define('User', {
-    name: DataTypes.STRING,
-    email: {
-      type: DataTypes.STRING,
-      unique: true,
+class User extends Model {}
+
+User.init({
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
     },
-    password: DataTypes.STRING,
-    username: DataTypes.STRING,
-    nic: DataTypes.STRING,
-    profile_photo: DataTypes.STRING,
+    firstName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    email: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
+    },
+    country: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    username: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     role: {
-      type: DataTypes.ENUM('traveler', 'hotelier', 'driver', 'admin'), // Define role as ENUM
-      defaultValue: 'traveler', // Set default role
+        type: DataTypes.ENUM('traveler', 'hotelier', 'driver', 'admin', 'staff'),
+        allowNull: false,
+    },
+    profile_photo: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: Sequelize.fn('NOW'), // Correctly reference Sequelize.fn
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        field: 'created_at', // Custom field name in database
     },
     updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: Sequelize.fn('NOW'), // Correctly reference Sequelize.fn
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        field: 'updated_at', // Custom field name in database
     },
-  });
+    nic: {
+        type: DataTypes.STRING,
+        allowNull: true, // Nullable, only for hoteliers
+    },
+    driving_license_id: {
+        type: DataTypes.STRING,
+        allowNull: true, // Nullable, only for drivers
+    },
+}, {
+    sequelize,
+    modelName: 'User',
+    tableName: 'users',
+    timestamps: true, // This will automatically manage createdAt and updatedAt
+});
 
-  return User;
-};
+module.exports = User;
