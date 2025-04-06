@@ -1,35 +1,35 @@
 'use strict';
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Rooms', {
+    await queryInterface.createTable('rooms', {
       id: {
-        allowNull: false,
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
-        type: Sequelize.UUID, // Change to UUID for consistency
       },
       hostel_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'Hostels',
-          key: 'id'
+          model: 'hostels', // Reference to the Hostels table
+          key: 'id',
         },
-        onDelete: 'CASCADE', // Optional
+        onDelete: 'CASCADE',
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false, // Optional: ensure that room names are provided
+        allowNull: false,
       },
       type: {
-        type: Sequelize.ENUM,
-        values: [
+        type: Sequelize.ENUM(
           'mixed_dormitory',
           'shared_dormitory',
           'womens_dormitory',
           'mens_dormitory',
           'deluxe_dormitory',
-          'private_room' // Consistent naming
-        ],
+          'private_room'
+        ),
         allowNull: false,
       },
       bed_type: {
@@ -51,23 +51,28 @@ module.exports = {
       },
       images: {
         type: Sequelize.JSON,
+        allowNull: true,
       },
       facility_ids: {
         type: Sequelize.JSON,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), // Default to current timestamp
+        defaultValue: Sequelize.NOW,
+        field: 'created_at',
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), // Default to current timestamp on update
-      }
+        defaultValue: Sequelize.NOW,
+        field: 'updated_at',
+      },
     });
   },
+
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Rooms');
-  }
+    await queryInterface.dropTable('rooms');
+  },
 };

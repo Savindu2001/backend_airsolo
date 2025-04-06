@@ -1,22 +1,40 @@
-const Hostel = require('../models/hostel');
+const { Hostel } = require('../models');
 
-// Create a new hostel
 exports.createHostel = async (req, res) => {
     try {
-        const hostel = await Hostel.create(req.body);
-        res.status(201).json(hostel);
+        const { hotelier_id, name, description, address, city, country, contact_number, email, website, rating, main_image, gallery } = req.body;
+
+        // Create the hostel
+        const hostel = await Hostel.create({
+            hotelier_id,
+            name,
+            description,
+            address,
+            city,
+            country,
+            contact_number,
+            email,
+            website,
+            rating,
+            main_image,
+            gallery,
+        });
+
+        return res.status(201).json({ message: 'Hostel created successfully', hostel });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error creating hostel:', error);
+        return res.status(500).json({ message: 'An error occurred while creating the hostel', error: error.message });
     }
 };
 
-// Get all hostels
+// Controller to get all hostels
 exports.getAllHostels = async (req, res) => {
     try {
         const hostels = await Hostel.findAll();
-        res.status(200).json(hostels);
+        return res.status(200).json(hostels);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error retrieving hostels:', error);
+        return res.status(500).json({ message: 'An error occurred while retrieving hostels', error: error.message });
     }
 };
 

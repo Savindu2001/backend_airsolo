@@ -1,25 +1,57 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-  class HouseRule extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
-    }
+
+const { Model, DataTypes } = require('sequelize');
+
+class HouseRule extends Model {
+  static associate(models) {
+    // Define associations here if needed
   }
+}
+
+// Export the House Rule model
+module.exports = (sequelize) => {
   HouseRule.init({
-    hostel_id: DataTypes.UUID,
-    room_id: DataTypes.UUID,
-    rule: DataTypes.TEXT
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    hostel_id: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'hostels', // Reference to the Hostels table
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    room_id: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'rooms', // Reference to the Rooms table
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    rule: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
   }, {
-    sequelize,
+    sequelize, // Ensure this is passed correctly
     modelName: 'HouseRule',
+    tableName: 'house_rules',
+    timestamps: true,
   });
+
   return HouseRule;
 };

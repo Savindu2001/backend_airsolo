@@ -1,62 +1,90 @@
+'use strict';
+
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Adjust the path to your database config
 
-class Hostel extends Model {}
+class Hostel extends Model {
+  static associate(models) {
+    // Define associations here if needed
+  }
+}
 
-Hostel.init({
+// Export the Hostel model
+module.exports = (sequelize) => {
+  Hostel.init({
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
     hotelier_id: {
-        type: DataTypes.UUID,
-        references: {
-            model: 'Users', // Assuming we have a Users table
-            key: 'id'
-        },
-        onDelete: 'CASCADE',
+      type: DataTypes.UUID,
+      references: {
+        model: 'users', // Reference to the Users table
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-        type: DataTypes.TEXT,
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     address: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     city: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     country: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     contact_number: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     email: {
-        type: DataTypes.STRING,
-        unique: true,
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
     },
     website: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     rating: {
-        type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL,
+      allowNull: true,
     },
     main_image: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     gallery: {
-        type: DataTypes.JSON,
+      type: DataTypes.JSON,
+      allowNull: true,
     },
-}, {
-    sequelize,
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
+  }, {
+    sequelize, // Ensure this is passed correctly
     modelName: 'Hostel',
-    tableName: 'Hostels',
+    tableName: 'hostels',
     timestamps: true,
-});
+  });
 
-module.exports = Hostel;
+  return Hostel;
+};

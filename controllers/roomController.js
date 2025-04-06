@@ -1,22 +1,37 @@
-const Room = require('../models/room');
+const { Room } = require('../models');
 
-// Create a new room
 exports.createRoom = async (req, res) => {
     try {
-        const room = await Room.create(req.body);
-        res.status(201).json(room);
+        const { hostel_id, name, type, bed_type, bed_qty, max_occupancy, price_per_person, images, facility_ids } = req.body;
+
+        // Create the room
+        const room = await Room.create({
+            hostel_id,
+            name,
+            type,
+            bed_type,
+            bed_qty,
+            max_occupancy,
+            price_per_person,
+            images,
+            facility_ids,
+        });
+
+        return res.status(201).json({ message: 'Room created successfully', room });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error creating room:', error);
+        return res.status(500).json({ message: 'An error occurred while creating the room', error: error.message });
     }
 };
 
-// Get all rooms
+// Controller to get all rooms
 exports.getAllRooms = async (req, res) => {
     try {
         const rooms = await Room.findAll();
-        res.status(200).json(rooms);
+        return res.status(200).json(rooms);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Error retrieving rooms:', error);
+        return res.status(500).json({ message: 'An error occurred while retrieving rooms', error: error.message });
     }
 };
 
