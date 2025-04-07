@@ -1,14 +1,20 @@
-const { Hostel } = require('../models');
+const { Hostel,City } = require('../models');
 
 exports.createHostel = async (req, res) => {
     try {
-        const { hotelier_id, name, description, address, city, country, contact_number, email, website, rating } = req.body;
+        const { hotelier_id, name, description, address, cityId, country, contact_number, email, website, rating } = req.body;
 
         // Check if main_image and gallery are set correctly
         const galleryImages = req.body.gallery || []; // Ensure it's an array
 
-        console.log("Main Image URL: ", mainImage); // Debugging log
-        console.log("Gallery URLs: ", galleryImages); // Debugging log
+        // console.log("Main Image URL: ", mainImage); // Debugging log
+        // console.log("Gallery URLs: ", galleryImages); // Debugging log
+
+        // Validate required fields
+        if (!name || !cityId) {
+            return res.status(400).json({ message: 'Hostel name and city are required.' });
+        }
+
 
         // Create the hostel
         const hostel = await Hostel.create({

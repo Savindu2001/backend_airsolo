@@ -59,6 +59,8 @@ npx sequelize-cli init
 
 # Create model with attributes
 npx sequelize-cli model:generate --name User --attributes "name:string,email:string,password:string"
+npx sequelize-cli migration:generate --name create-cities
+
 
 # Run migrations
 npx sequelize-cli db:migrate

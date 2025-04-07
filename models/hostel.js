@@ -40,6 +40,14 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    // cityId: {
+    //   type: DataTypes.INTEGER,
+    //   allowNull: false,
+    //   references: {
+    //       model: 'cities', 
+    //       key: 'id',
+    //   },
+    // },
     country: {
       type: DataTypes.STRING,
       allowNull: true,
