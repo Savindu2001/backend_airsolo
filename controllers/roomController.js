@@ -1,4 +1,5 @@
-const { Room } = require('../models');
+const { Room, HostelBooking} = require('../models');
+const { Op } = require('sequelize'); 
 
 exports.createRoom = async (req, res) => {
     try {
@@ -75,3 +76,33 @@ exports.deleteRoom = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
+
+// Room Availability Check
+exports.checkRoomAvailability = async (req, res) => {
+    try {
+      const { roomId, checkInDate, checkOutDate } = req.body;
+  
+      // Check for existing bookings in the same period
+      const existingBookings = await HostelBooking.findAll({
+        where: {
+          roomId,
+          checkInDate: {
+            [Op.lt]: checkOutDate,
+          },
+          checkOutDate: {
+            [Op.gt]: checkInDate,
+          },
+        },
+      });
+  
+      if (existingBookings.length > 0) {
+        return res.status(400).json({ message: 'Room is already booked for the selected dates' });
+      }
+  
+      return res.status(200).json({ message: 'Room is available for the selected dates' });
+    } catch (error) {
+      console.error('Error checking room availability:', error);
+      return res.status(500).json({ message: 'An error occurred while checking room availability', error });
+    }
+  };

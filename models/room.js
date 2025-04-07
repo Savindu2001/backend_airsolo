@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
     hostel_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'hostels', // Reference to the Hostels table
+        model: 'hostels', 
         key: 'id',
       },
       onDelete: 'CASCADE',

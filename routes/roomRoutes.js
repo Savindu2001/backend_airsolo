@@ -7,5 +7,6 @@ router.get('/', roomController.getAllRooms);
 router.get('/:id', roomController.getRoomById);
 router.put('/:id', roomController.updateRoom);
 router.delete('/:id', roomController.deleteRoom);
+router.post('/availability', roomController.checkRoomAvailability);
 
 module.exports = router;
