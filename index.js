@@ -35,7 +35,7 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/house-rules', houseRuleRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/host', hostVerificationRoutes); 
-app.use('/api/hostel-booking', hostelBookingRoutes);
+app.use('/api', hostelBookingRoutes);
 
 // Server Setup
 const PORT = process.env.PORT || 3000; // Set the port, fallback to 3000 if not defined in .env
