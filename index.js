@@ -9,6 +9,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const facilityRoutes = require('./routes/facilityRoutes');
 const houseRuleRoutes = require('./routes/houseRuleRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
+const hostVerificationRoutes = require('./routes/hostVerification');
 
 
 // Enable CORS for all routes
@@ -20,8 +21,8 @@ app.use(bodyParser.json());
 
 // Example GET route
 app.get('/', (req, res) => {
-    res.send('Hello world!'); // Basic response for root URL
-});
+    res.send('Welcome to the AirSolo API!');
+  });
 
 
 
@@ -32,6 +33,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/house-rules', houseRuleRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/host', hostVerificationRoutes); 
 
 // Server Setup
 const PORT = process.env.PORT || 3000; // Set the port, fallback to 3000 if not defined in .env
