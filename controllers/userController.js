@@ -221,9 +221,9 @@ exports.forgotPassword = async (req, res ) => {
        const mailOptions = {
         from: process.env.EMAIL_USER, // Sender address
         to: email, // List of recipients
-        subject: 'Air Solo ßPassword Reset Request',
-    html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Password Reset Request</title><style>body{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding:0}.container{width:100%;max-width:600px;margin:0 auto;background-color:#ffffff;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#333}p{font-size:16px;line-height:1.5;color:#555}a{display:inline-block;margin:20px 0;padding:10px 20px;font-size:16px;color:#fff;background-color:#007bff;text-decoration:none;border-radius:5px}a:hover{background-color:#0056b3}footer{margin-top:20px;text-align:center;font-size:14px;color:#777}</style></head><body><div class="container"><h1>Password Reset Request</h1><p>Hello,</p><p>We received a request to reset your password. To proceed, please click the button below:</p><a href="${link}">Reset Password</a><p>If you did not request a password reset, please ignore this email.</p><footer><p>Thank you,</p><p>Your Company Name</p></footer></div></body></html>`
-};
+        subject: 'AirSolo Password Reset Request',
+        text: `To reset your password, click on the following link: ${link}`,
+        };
 
         // Send mail
         await transporter.sendMail(mailOptions);
