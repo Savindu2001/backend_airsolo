@@ -53,6 +53,15 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    travelerIds: {
+      type: DataTypes.JSON, 
+      allowNull: true,
+    },
+    bookingDateTime: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
     status: {
       type: DataTypes.ENUM('pending', 'confirmed', 'canceled'),
       allowNull: false,

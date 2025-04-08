@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'users',
+          model: 'users', // Ensure the users table exists
           key: 'id',
         },
       },
@@ -20,12 +20,16 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'vehicles',
+          model: 'vehicles', // Ensure the vehicles table exists
           key: 'id',
         },
       },
       distance: {
         type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      totalPrice: {
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
       bookedSeats: {
@@ -37,13 +41,18 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
-      seatsToShare: {  
-            type: Sequelize.INTEGER,
-            allowNull: true,
-          },
-      totalPrice: {
-        type: Sequelize.DECIMAL(10, 2),
+      seatsToShare: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      travelerIds: {
+        type: Sequelize.JSON,
+        allowNull: true,
+      },
+      bookingDateTime: {
+        type: Sequelize.DATE,
         allowNull: false,
+        defaultValue: Sequelize.NOW,
       },
       status: {
         type: Sequelize.ENUM('pending', 'confirmed', 'canceled'),

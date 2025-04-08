@@ -17,63 +17,68 @@ const calculateTotalPrice = (vehicleType, distance, isShared, seatsToShare) => {
 
 // 🚕 Booking a new taxi (shared or private)
 const bookingTaxi = async (req, res) => {
-    const { travelerId, vehicleId, distance, isShared, seatsToShare = 1 } = req.body;
+  const { vehicleId, travelerId, distance, isShared, seatsToShare = 1 } = req.body;
 
-    try {
-        const vehicle = await Vehicle.findByPk(vehicleId, {
-            include: [{ model: VehicleType }],
-        });
+  try {
+      const vehicle = await Vehicle.findByPk(vehicleId, {
+          include: [{ model: VehicleType }],
+      });
 
-        if (!vehicle) {
-            return res.status(404).json({ message: 'Vehicle not found' });
-        }
+      if (!vehicle) {
+          return res.status(404).json({ message: 'Vehicle not found' });
+      }
 
-        const vehicleType = vehicle.VehicleType;
-        if (!vehicleType) {
-            return res.status(404).json({ message: 'Vehicle type not found' });
-        }
+      const vehicleType = vehicle.VehicleType;
+      if (!vehicleType) {
+          return res.status(404).json({ message: 'Vehicle type not found' });
+      }
 
-        const totalSeats = vehicle.number_of_seats;
+      const totalSeats = vehicle.number_of_seats;
 
-        // If shared, check existing shared bookings
-        if (isShared) {
-            const existingBookings = await TaxiBooking.findAll({
-                where: {
-                    vehicleId,
-                    status: 'pending',
-                    isShared: true,
-                }
-            });
+      // If shared, check existing shared bookings
+      if (isShared) {
+          const existingBookings = await TaxiBooking.findAll({
+              where: {
+                  vehicleId,
+                  status: 'pending',
+                  isShared: true,
+              }
+          });
 
-            const alreadyBookedSeats = existingBookings.reduce((sum, b) => sum + b.bookedSeats, 0);
+          const alreadyBookedSeats = existingBookings.reduce((sum, b) => sum + b.bookedSeats, 0);
 
-            if ((seatsToShare + alreadyBookedSeats) > totalSeats) {
-                return res.status(400).json({
-                    message: `Only ${totalSeats - alreadyBookedSeats} seat(s) are available for sharing.`,
-                });
-            }
-        } else if (seatsToShare > totalSeats) {
-            return res.status(400).json({ message: `Vehicle only supports ${totalSeats} seats.` });
-        }
+          if ((seatsToShare + alreadyBookedSeats) > totalSeats) {
+              return res.status(400).json({
+                  message: `Only ${totalSeats - alreadyBookedSeats} seat(s) are available for sharing.`,
+              });
+          }
+      } else if (seatsToShare > totalSeats) {
+          return res.status(400).json({ message: `Vehicle only supports ${totalSeats} seats.` });
+      }
 
-        const totalPrice = calculateTotalPrice(vehicleType, distance, isShared, seatsToShare);
+      const totalPrice = calculateTotalPrice(vehicleType, distance, isShared, seatsToShare);
 
-        const booking = await TaxiBooking.create({
-            travelerId,
-            vehicleId,
-            distance,
-            totalPrice,
-            isShared,
-            seatsToShare,
-            bookedSeats: seatsToShare,
-            status: 'pending',
-        });
+      const newBooking = await TaxiBooking.create({
+          travelerId,
+          vehicleId,
+          distance,
+          totalPrice,
+          isShared,
+          seatsToShare,
+          bookedSeats: seatsToShare,
+          travelerIds: isShared ? [travelerId] : [travelerId], // Save traveler ID in an array
+          bookingDate: new Date(), // Current date/time
+          status: 'pending',
+      });
 
-        return res.status(201).json({ message: 'Taxi booked successfully', booking });
-    } catch (error) {
-        console.error('Error booking taxi:', error);
-        return res.status(500).json({ message: 'Failed to book taxi', error: error.message });
-    }
+      return res.status(201).json({
+          message: 'Taxi booked successfully',
+          booking: newBooking,
+      });
+  } catch (error) {
+      console.error('Error booking taxi:', error);
+      return res.status(500).json({ message: 'Failed to book taxi', error: error.message });
+  }
 };
 
 // Controller to update booking status
@@ -82,7 +87,7 @@ const updateBookingStatus = async (req, res) => {
   const { status } = req.body; // Expected new status (e.g., 'confirmed')
 
   try {
-      const booking = await Booking.findByPk(bookingId);
+    const booking = await TaxiBooking.findByPk(bookingId); // Corrected from Booking to TaxiBooking
       if (!booking) {
           return res.status(404).json({ message: 'Booking not found' });
       }
@@ -123,37 +128,36 @@ const getAvailableSharedBookings = async (req, res) => {
 
 // ✅ Join existing shared booking
 const joinSharedBooking = async (req, res) => {
-    const { bookingId } = req.params;
-    const { travelerId, seatsToBook } = req.body;
+  const { bookingId } = req.params;
+  const { travelerId, seatsToBook } = req.body;
 
-    try {
-        const booking = await TaxiBooking.findByPk(bookingId, {
-            include: [{ model: Vehicle }],
-        });
+  try {
+      const booking = await TaxiBooking.findByPk(bookingId);
 
-        if (!booking || !booking.isShared || booking.status !== 'pending') {
-            return res.status(404).json({ message: 'Shared booking not found or unavailable' });
-        }
+      if (!booking || !booking.isShared || booking.status !== 'pending') {
+          return res.status(404).json({ message: 'Shared booking not found or unavailable' });
+      }
 
-        const totalSeats = booking.Vehicle.number_of_seats;
+      const totalSeats = booking.bookedSeats + seatsToBook;
 
-        if ((booking.bookedSeats + seatsToBook) > totalSeats) {
-            return res.status(400).json({
-                message: `Only ${totalSeats - booking.bookedSeats} seats are left in this shared booking.`,
-            });
-        }
+      if (totalSeats > booking.number_of_seats) {
+          return res.status(400).json({
+              message: `Only ${booking.number_of_seats - booking.bookedSeats} seats are left in this shared booking.`,
+          });
+      }
 
-        // Create a new linked booking (or add to the same booking depending on your logic)
-        booking.bookedSeats += seatsToBook;
-        await booking.save();
+      // Update the booking to include the new traveler
+      booking.bookedSeats += seatsToBook;
+      booking.travelerIds.push(travelerId); // Add traveler ID to array
+      await booking.save();
 
-        // Optional: Create a "join record" or associate multiple travelers (if needed)
-        return res.status(200).json({ message: 'Successfully joined shared booking', booking });
-    } catch (error) {
-        console.error('Error joining shared booking:', error);
-        return res.status(500).json({ message: 'Failed to join shared booking', error: error.message });
-    }
+      return res.status(200).json({ message: 'Successfully joined shared booking', booking });
+  } catch (error) {
+      console.error('Error joining shared booking:', error);
+      return res.status(500).json({ message: 'Failed to join shared booking', error: error.message });
+  }
 };
+
 
 module.exports = {
     bookingTaxi,
