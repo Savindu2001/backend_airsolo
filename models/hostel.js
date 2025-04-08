@@ -4,7 +4,8 @@ const { Model, DataTypes } = require('sequelize');
 
 class Hostel extends Model {
   static associate(models) {
-    // Define associations here if needed
+    this.belongsTo(models.City, { foreignKey: 'cityId' });
+    this.belongsTo(models.User, { foreignKey: 'hotelier_id' });
   }
 }
 

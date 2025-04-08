@@ -9,7 +9,7 @@ const upload = multer({
 
 // Middleware for uploading images
 const uploadHostelImages = upload.fields([
-  { name: 'gallery', maxCount: 5 }, // Gallery images
+  { name: 'gallery', maxCount: 6 }, // Gallery images
 ]);
 
 
@@ -20,7 +20,7 @@ const uploadToS3 = async (req, res, next) => {
         if (req.files.gallery) {
             req.body.gallery = [];
             for (const galleryFile of req.files.gallery) {
-                const galleryImageKey = `hostels/${Date.now()}_${galleryFile.originalname}`;
+                const galleryImageKey = `hostels/${hostelId}/gallery/${Date.now()}_${galleryFile.originalname}`;
 
                 await s3Client.send(
                     new PutObjectCommand({
