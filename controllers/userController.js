@@ -219,11 +219,12 @@ exports.forgotPassword = async (req, res ) => {
 
        // Send the email using Nodemailer
        const mailOptions = {
-        from: process.env.EMAIL_USER, // Sender address
-        to: email, // List of recipients
-        subject: 'AirSolo Password Reset Request',
-        text: `To reset your password, click on the following link: ${link}`,
-        };
+    from: `"Air Solo Service" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Password Reset Request',
+    html: `<p>Click <a href="${link}">here</a> to reset your password.</p>`
+};
+
 
         // Send mail
         await transporter.sendMail(mailOptions);
