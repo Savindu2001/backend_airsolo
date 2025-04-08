@@ -9,6 +9,6 @@ router.post('/', bookingTaxi);
 router.patch('/update-booking/:bookingId', updateBookingStatus);
 
 // Get Shared Booking
-//router.get('/shared-available', getAvailableSharedBookings)
+router.get('/shared-available', getAvailableSharedBookings)
 
 module.exports = router;
