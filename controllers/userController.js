@@ -9,7 +9,12 @@ const s3Client = new S3Client({
 // Controller to create a new user
 exports.createUser = async (req, res) => {
     try {
-        const { firstName, lastName, email, country, username, password, role, profile_photo, nic, driving_license_id } = req.body;
+        const { firstName, lastName, email, country, gender, username, password, role, profile_photo, nic, driving_license_id } = req.body;
+
+        // Check if the required fields are present
+        if (!firstName || !lastName || !email || !username || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
 
         // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -20,6 +25,7 @@ exports.createUser = async (req, res) => {
             lastName,
             email,
             country,
+            gender,
             username,
             password: hashedPassword,
             role,

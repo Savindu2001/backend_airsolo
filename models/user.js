@@ -33,6 +33,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    gender:{
+      type: DataTypes.ENUM('Male','Female'),
+      allowNull: false
+    },
     username: {
       type: DataTypes.STRING,
       unique: true,
