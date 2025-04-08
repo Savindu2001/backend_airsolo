@@ -5,6 +5,7 @@ const s3Client = new S3Client({
     region: 'ap-southeast-1', // Correct region for your bucket
     endpoint: 'https://s3.ap-southeast-1.amazonaws.com' // Optional: Not needed in most cases
 }); 
+const admin = require('../services/firebaseService');
 
 // Controller to create a new user
 exports.createUser = async (req, res) => {
@@ -16,11 +17,19 @@ exports.createUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
+        // Create user in Firebase Authentication
+        const userRecord = await admin.auth().createUser({
+            email,
+            password,
+            displayName: `${firstName} ${lastName}`,
+        });
+
         // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create the user
         const user = await User.create({
+            id: userRecord.uid,
             firstName,
             lastName,
             email,
