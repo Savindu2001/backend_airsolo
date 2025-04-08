@@ -14,6 +14,7 @@ const hostelBookingRoutes = require('./routes/hostelBooking');
 const cityRoutes = require('./routes/cityRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const activityEventRoutes = require('./routes/activityEventRoutes');
+const taxiPriceRoutes = require('./routes/taxiPriceRoutes');
 
 
 // Enable CORS for all routes
@@ -42,6 +43,7 @@ app.use('/api/bookings', hostelBookingRoutes);
 app.use('/api/city', cityRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/activity-events', activityEventRoutes);
+app.use('/api/taxi-price', taxiPriceRoutes);
 
 // Server Setup
 const PORT = process.env.PORT || 3000; // Set the port, fallback to 3000 if not defined in .env
