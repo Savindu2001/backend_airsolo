@@ -9,12 +9,14 @@ const roomRoutes = require('./routes/roomRoutes');
 const facilityRoutes = require('./routes/facilityRoutes');
 const houseRuleRoutes = require('./routes/houseRuleRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
+const vehicleTypeRoutes = require('./routes/vehicleTypeRoutes');
 const hostVerificationRoutes = require('./routes/hostVerification');
 const hostelBookingRoutes = require('./routes/hostelBooking');
 const cityRoutes = require('./routes/cityRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const activityEventRoutes = require('./routes/activityEventRoutes');
 const tripGenieRoutes = require('./routes/tripGenie'); 
+
 
 
 // Enable CORS for all routes
@@ -38,6 +40,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/house-rules', houseRuleRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/vehicle-type', vehicleTypeRoutes);
 app.use('/api/host', hostVerificationRoutes); 
 app.use('/api/bookings', hostelBookingRoutes);
 app.use('/api/city', cityRoutes);

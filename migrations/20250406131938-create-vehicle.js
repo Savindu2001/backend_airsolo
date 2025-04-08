@@ -1,6 +1,6 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('vehicles', {
@@ -12,7 +12,7 @@ module.exports = {
       vehicle_number: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true, // Ensure vehicle number is unique
+        unique: true, 
       },
       vehicleTypeId: {
            type: Sequelize.UUID,
@@ -21,6 +21,8 @@ module.exports = {
              key: 'id',
            },
            allowNull: false,
+           onDelete: 'CASCADE', 
+           onUpdate: 'CASCADE', 
          },
       number_of_seats: {
         type: Sequelize.INTEGER,
