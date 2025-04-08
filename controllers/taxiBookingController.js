@@ -146,6 +146,11 @@ const joinSharedBooking = async (req, res) => {
           });
       }
 
+      // Ensure travelerIds is an array
+      if (!Array.isArray(booking.travelerIds)) {
+          booking.travelerIds = JSON.parse(booking.travelerIds); // Parse if it's a string
+      }
+
       // Update the booking to include the new traveler
       booking.bookedSeats += seatsToBook;
       booking.travelerIds.push(travelerId); // Add traveler ID to array
@@ -157,6 +162,7 @@ const joinSharedBooking = async (req, res) => {
       return res.status(500).json({ message: 'Failed to join shared booking', error: error.message });
   }
 };
+
 
 
 module.exports = {

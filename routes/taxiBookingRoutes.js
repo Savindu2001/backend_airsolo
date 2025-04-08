@@ -12,7 +12,7 @@ router.patch('/update-booking/:bookingId', updateBookingStatus);
 router.get('/shared-available', getAvailableSharedBookings);
 
 // Join to Shared Booking
-router.post('/join/:Id', joinSharedBooking);
+router.post('/join/:bookingId', joinSharedBooking);
 
 // Update Booking Status
 router.put('/:bookingId/status',updateBookingStatus);
