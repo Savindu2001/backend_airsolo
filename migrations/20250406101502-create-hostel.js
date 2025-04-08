@@ -12,7 +12,7 @@ module.exports = {
       hotelier_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'users', // Reference to the Users table
+          model: 'users', 
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -29,9 +29,21 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      city: {
-        type: Sequelize.STRING,
-        allowNull: true,
+      cityId: {
+            type: Sequelize.UUID,
+            allowNull: false,
+            references: {
+                model: 'cities', 
+                key: 'id',
+            },
+      },
+      latitude: {
+        type: Sequelize.FLOAT,
+        allowNull: true
+      },
+      longitude: {
+        type: Sequelize.FLOAT,
+        allowNull: true
       },
       country: {
         type: Sequelize.STRING,

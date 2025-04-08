@@ -11,9 +11,9 @@ exports.createHostel = async (req, res) => {
         // console.log("Gallery URLs: ", galleryImages); // Debugging log
 
         // Validate required fields
-        // if (!name || !cityId) {
-        //     return res.status(400).json({ message: 'Hostel name and city are required.' });
-        // }
+        if (!name || !cityId) {
+            return res.status(400).json({ message: 'Hostel name and city are required.' });
+        }
 
 
         // Create the hostel

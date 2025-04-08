@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
     hotelier_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'users', // Reference to the Users table
+        model: 'users', 
         key: 'id',
       },
       onDelete: 'CASCADE',
@@ -36,18 +36,22 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    city: {
-      type: DataTypes.STRING,
-      allowNull: true,
+    cityId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+          model: 'cities', 
+          key: 'id',
+      },
     },
-    // cityId: {
-    //   type: DataTypes.INTEGER,
-    //   allowNull: false,
-    //   references: {
-    //       model: 'cities', 
-    //       key: 'id',
-    //   },
-    // },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
     country: {
       type: DataTypes.STRING,
       allowNull: true,
