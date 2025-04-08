@@ -8,37 +8,21 @@ const upload = multer({
 });
 
 // Middleware for uploading images
-const uploadPlacesImages = upload.fields([
-  { name: 'gallery', maxCount: 5 }, // Gallery images
+const uploadCityImages = upload.fields([
+  { name: 'gallery', maxCount: 8 }, // Gallery images
 ]);
 
 // Custom upload function
-// Custom upload function
+
 const uploadToS3 = async (req, res, next) => {
     try {
-        // Upload main image
-        if (req.files.main_image) {
-            const mainImageFile = req.files.main_image[0];
-            const mainImageKey = `hostels/${Date.now()}_${mainImageFile.originalname}`;
-
-            await s3Client.send(
-                new PutObjectCommand({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: mainImageKey,
-                    Body: mainImageFile.buffer,
-                    ContentType: mainImageFile.mimetype, // Set the content type
-                })
-            );
-
-            // Set the URL for main image
-            req.body.main_image = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${mainImageKey}`;
-        }
+        
 
         // Upload gallery images
         if (req.files.gallery) {
             req.body.gallery = [];
             for (const galleryFile of req.files.gallery) {
-                const galleryImageKey = `hostels/${Date.now()}_${galleryFile.originalname}`;
+                const galleryImageKey = `Cities/${Date.now()}_${galleryFile.originalname}`;
 
                 await s3Client.send(
                     new PutObjectCommand({
@@ -62,4 +46,4 @@ const uploadToS3 = async (req, res, next) => {
 };
 
 
-module.exports = { uploadHostelImages, uploadToS3 };
+module.exports = { uploadCityImages, uploadToS3 };
