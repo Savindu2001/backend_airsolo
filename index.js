@@ -12,6 +12,7 @@ const vehicleRoutes = require('./routes/vehicleRoutes');
 const vehicleTypeRoutes = require('./routes/vehicleTypeRoutes');
 const hostVerificationRoutes = require('./routes/hostVerification');
 const hostelBookingRoutes = require('./routes/hostelBooking');
+const taxiBookingRoutes = require('./routes/taxiBookingRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const activityEventRoutes = require('./routes/activityEventRoutes');
@@ -47,6 +48,7 @@ app.use('/api/city', cityRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/activity-events', activityEventRoutes);
 app.use('/api/tripgenie', tripGenieRoutes);
+app.use('/api/taxi-booking',taxiBookingRoutes);
 
 
 
