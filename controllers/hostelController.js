@@ -2,7 +2,7 @@ const { Hostel,City } = require('../models');
 
 exports.createHostel = async (req, res) => {
     try {
-        const { hotelier_id, name, description, address, city, country, contact_number, email, website, rating } = req.body;
+        const { hotelier_id, name, description, address, cityId, country, contact_number, email, website, rating } = req.body;
 
         // Check if main_image and gallery are set correctly
         const galleryImages = req.body.gallery || []; // Ensure it's an array
@@ -22,7 +22,7 @@ exports.createHostel = async (req, res) => {
             name,
             description,
             address,
-            city,
+            cityId,
             country,
             contact_number,
             email,
