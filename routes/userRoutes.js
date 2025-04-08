@@ -16,4 +16,10 @@ router.put('/:id/profile-photo', uploadProfilePhoto, userController.updateProfil
 // Route for deleting user profile photo
 router.delete('/:id/profile-photo', userController.deleteProfilePhoto); // Delete user profile photo
 
+
+
+// --- --- FireBase
+
+router.post('/forgot-password', userController.forgotPassword);
+
 module.exports = router;

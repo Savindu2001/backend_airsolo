@@ -199,3 +199,62 @@ exports.deleteProfilePhoto = async (req, res) => {
       return res.status(500).json({ message: 'An error occurred while deleting the profile photo', error: error.message });
     }
   };
+
+
+
+// Password Reset Using firebase
+
+exports.forgotPassword = async (req, res ) => {
+
+    const {email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+
+       const link = await admin.auth().generatePasswordResetLink(email);
+       console.log(`Password reset link sent to ${email}: ${link}`);
+        return res.status(200).json({ message: 'Password reset email sent' });
+        
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        return res.status(500).json({ message: 'Failed to send password reset email', error: error.message });
+    }
+};
+
+
+
+/// Password reset update
+
+exports.resetPassword = async (req, res) => {
+    const { uid, newPassword } = req.body; // uid: Firebase user ID, newPassword: New password
+
+    if (!uid || !newPassword) {
+        return res.status(400).json({ message: 'User ID and new password are required' });
+    }
+
+    try {
+        // Update password in Firebase
+        await admin.auth().updateUser(uid, {
+            password: newPassword,
+        });
+
+        // Update password in MySQL
+        const user = await User.findByPk(uid);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Hash the new password before saving
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save(); // Save the updated user record
+
+        return res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        return res.status(500).json({ message: 'Failed to reset password', error: error.message });
+    }
+};
+ 
