@@ -14,6 +14,16 @@ module.exports = {
         allowNull: false,
         unique: true, 
       },
+      driver_id: {
+            type: Sequelize.UUID,
+            references: {
+              model: 'users',
+              key: 'id',
+            },
+            allowNull: false,
+            onDelete: 'CASCADE', 
+            onUpdate: 'CASCADE', 
+          },
       vehicleTypeId: {
            type: Sequelize.UUID,
            references: {

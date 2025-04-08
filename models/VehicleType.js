@@ -4,7 +4,7 @@ const { Model, DataTypes } = require('sequelize');
 
 class VehicleType extends Model {
   static associate(models) {
-    // Define associations here if needed
+    
   }
 }
 

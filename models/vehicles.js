@@ -5,6 +5,7 @@ const { Model, DataTypes } = require('sequelize');
 class Vehicle extends Model {
   static associate(models) {
     this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId' });
+    this.belongsTo(models.User, {foreignKey: 'driver_id'} );
   }
 }
 
@@ -20,6 +21,13 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true, // Ensure vehicle number is unique
+    },
+    driver_id: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      }
     },
     vehicleTypeId: {
       type: DataTypes.UUID,

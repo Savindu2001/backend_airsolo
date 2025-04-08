@@ -2,11 +2,16 @@ const { VehicleType } = require('../models');
 
 // Create Vehicle Type
 const createVehicleType = async (req, res) => {
-  const { type, pricePerKm } = req.body;
+  const { type, priceFor5Km, additionalPricePerKm } = req.body;
+
+  // Basic validation
+  if (!type || priceFor5Km === undefined || additionalPricePerKm === undefined) {
+    return res.status(400).json({ message: 'Type, price for 5 km, and additional price per km are required' });
+  }
 
   try {
-    const vehicleType = await VehicleType.create({ type, pricePerKm });
-    return res.status(201).json(vehicleType);
+    const vehicleType = await VehicleType.create({ type, priceFor5Km, additionalPricePerKm });
+    return res.status(201).json({message : 'Vehicle Type Created Successfully!', vehicleType});
   } catch (error) {
     return res.status(500).json({ message: 'Failed to create vehicle type', error: error.message });
   }
@@ -25,7 +30,12 @@ const getAllVehicleTypes = async (req, res) => {
 // Update Vehicle Type
 const updateVehicleType = async (req, res) => {
   const { id } = req.params;
-  const { pricePerKm } = req.body;
+  const { priceFor5Km, additionalPricePerKm } = req.body;
+
+  // Basic validation
+  if (priceFor5Km === undefined && additionalPricePerKm === undefined) {
+    return res.status(400).json({ message: 'At least one of priceFor5Km or additionalPricePerKm must be provided' });
+  }
 
   try {
     const vehicleType = await VehicleType.findByPk(id);
@@ -33,7 +43,12 @@ const updateVehicleType = async (req, res) => {
       return res.status(404).json({ message: 'Vehicle type not found' });
     }
 
-    vehicleType.pricePerKm = pricePerKm;
+    if (priceFor5Km !== undefined) {
+      vehicleType.priceFor5Km = priceFor5Km;
+    }
+    if (additionalPricePerKm !== undefined) {
+      vehicleType.additionalPricePerKm = additionalPricePerKm;
+    }
     await vehicleType.save();
 
     return res.status(200).json(vehicleType);
@@ -53,7 +68,7 @@ const deleteVehicleType = async (req, res) => {
     }
 
     await vehicleType.destroy();
-    return res.status(204).send();
+    return res.status(204).send(); // No content response for deletion
   } catch (error) {
     return res.status(500).json({ message: 'Failed to delete vehicle type', error: error.message });
   }
