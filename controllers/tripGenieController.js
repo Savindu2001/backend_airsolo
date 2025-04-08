@@ -1,4 +1,5 @@
 const { getTouristGuideDetails, getTripDetails } = require('../services/openaiService');
+const { generatePDF } = require('../services/pdfService');
 
 
 // Ai Feature 1 - Place Guide
@@ -26,4 +27,35 @@ const getTripPlan = async (req, res) => {
     }
   };
 
-module.exports = { getPlaceGuide , getTripPlan };
+
+
+// if need save trip details it convert as pdf
+const downloadTripPlanPDF = async (req, res) => {
+  const { startCity, startDate, endDate, tripType, numberOfGuest } = req.body;
+
+  try {
+    // Get trip details from OpenAI
+    const tripDetails = await getTripDetails(startCity, startDate, endDate, tripType, numberOfGuest);
+
+    // Generate PDF using the trip details
+    const pdfDoc = generatePDF('TripGenie Travel Plan', tripDetails);
+
+    // Set headers for PDF response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=TripGenie-Plan.pdf');
+
+    pdfDoc.pipe(res); // Pipe the PDF document to the response
+    pdfDoc.end(); // End the PDF document
+  } catch (err) {
+    console.error('Error generating trip plan or PDF:', err);
+    res.status(500).json({ message: 'Failed to generate PDF' });
+  }
+};
+
+module.exports = { getPlaceGuide , getTripPlan , downloadTripPlanPDF};
+
+
+
+
+
+
