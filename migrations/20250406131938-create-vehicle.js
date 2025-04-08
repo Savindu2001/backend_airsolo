@@ -14,10 +14,14 @@ module.exports = {
         allowNull: false,
         unique: true, // Ensure vehicle number is unique
       },
-      type: {
-        type: Sequelize.ENUM('Tuk Tuk', 'Van', 'Car', 'SUV'),
-        allowNull: false,
-      },
+      vehicleTypeId: {
+           type: Sequelize.UUID,
+           references: {
+             model: 'vehicle_types',
+             key: 'id',
+           },
+           allowNull: false,
+         },
       number_of_seats: {
         type: Sequelize.INTEGER,
         allowNull: false,

@@ -2,35 +2,30 @@
 
 const { Model, DataTypes } = require('sequelize');
 
-class Vehicle extends Model {
+class VehicleType extends Model {
   static associate(models) {
-    this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId' });
+    // Define associations here if needed
   }
 }
 
-// Export the Vehicle model
+// Export the VehicleType model
 module.exports = (sequelize) => {
-  Vehicle.init({
+  VehicleType.init({
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    vehicle_number: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true, // Ensure vehicle number is unique
-    },
-    vehicleTypeId: {
-      type: DataTypes.UUID,
-      references: {
-        model: 'vehicle_types',
-        key: 'id',
-      },
+    type: {
+      type: DataTypes.ENUM('Tuk Tuk', 'Car', 'Van', 'SUV'),
       allowNull: false,
     },
-    number_of_seats: {
-      type: DataTypes.INTEGER,
+    priceFor5Km: {  // Base price for the first 5 km
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    additionalPricePerKm: { // Additional price for each kilometer after 5 km
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     createdAt: {
@@ -44,11 +39,11 @@ module.exports = (sequelize) => {
       field: 'updated_at',
     },
   }, {
-    sequelize, // Ensure this is passed correctly
-    modelName: 'Vehicle',
-    tableName: 'vehicles',
+    sequelize,
+    modelName: 'VehicleType',
+    tableName: 'vehicle_types',
     timestamps: true,
   });
 
-  return Vehicle;
+  return VehicleType;
 };
