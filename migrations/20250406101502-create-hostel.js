@@ -66,10 +66,6 @@ module.exports = {
         type: Sequelize.DECIMAL,
         allowNull: true,
       },
-      main_image: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
       gallery: {
         type: Sequelize.JSON,
         allowNull: true,
