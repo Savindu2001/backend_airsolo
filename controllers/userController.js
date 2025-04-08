@@ -181,7 +181,7 @@ exports.deleteProfilePhoto = async (req, res) => {
       await s3Client.send(new DeleteObjectCommand(deleteParams));
   
       // Clear the profile photo field and save
-      user.profile_photo = null;
+      user.profile_photo = 'http://yourprofileimage.png';
       await user.save();
   
       return res.status(200).json({ message: 'Profile photo deleted successfully' });
