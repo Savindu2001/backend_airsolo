@@ -10,43 +10,29 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Sign in with Firebase
-        const user = await admin.auth().getUserByEmail(email);
+        // Verify Firebase credentials (using your logic)
+        const userCredential = await admin.auth().signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
 
-        // Check if email is verified
-        if (!user.emailVerified) {
-            return res.status(403).json({ message: "Please verify your email before logging in." });
-        }
-
-        // Sign in using Firebase Authentication REST API (simulate login)
-        const firebaseAuth = require("firebase/auth");
-        const { getAuth, signInWithEmailAndPassword } = firebaseAuth;
-
-        // If using Firebase Admin SDK only (no Firebase frontend auth), you can skip this part
-        // Instead, your frontend should send Firebase ID token, which you verify
-
-        // For now: let's continue assuming email is verified.
-
-        // Check if user exists in your MySQL DB
+        // Check if user exists in MySQL
         const dbUser = await User.findOne({ where: { email } });
-
         if (!dbUser) {
-            return res.status(404).json({ message: "User not found in database." });
+            return res.status(404).json({ message: "User not found" });
         }
 
-        // Return a JWT (or your custom session token)
+        // Generate JWT
         const token = jwt.sign(
-            { uid: user.uid, email: user.email, role: dbUser.role },
+            { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            { expiresIn: "1d" } // Token expires in 1 day
         );
 
         return res.status(200).json({
             message: "Login successful",
             token,
             user: {
-                uid: user.uid,
-                email: user.email,
+                uid: dbUser.id,
+                email: dbUser.email,
                 role: dbUser.role,
                 firstName: dbUser.firstName,
                 lastName: dbUser.lastName,
@@ -59,8 +45,6 @@ exports.loginUser = async (req, res) => {
         return res.status(500).json({ message: "Login failed", error: error.message });
     }
 };
-
-
 
 
 exports.socialLogin = async (req, res) => {

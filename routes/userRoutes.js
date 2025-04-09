@@ -2,26 +2,23 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { uploadProfilePhoto } = require('../middlewares/uploadProfilePhoto'); 
+const { authenticateJWT } = require("../middleware/auth");
 
 // Define your routes
 router.post('/register', userController.createUser); // Create a new user
-router.get('/', userController.getAllUsers); // Get all users
-router.get('/:id', userController.getUserById); // Get user by ID
-router.put('/:id', userController.updateUser); // Update user
-router.delete('/:id', userController.deleteUser); // Delete user
+router.get('/', authenticateJWT, userController.getAllUsers); // Get all users (protected route)
+router.get('/:id', authenticateJWT, userController.getUserById); // Get user by ID (protected route)
+router.put('/:id', authenticateJWT, userController.updateUser); // Update user (protected route)
+router.delete('/:id', authenticateJWT, userController.deleteUser); // Delete user (protected route)
 
 // Route for updating user profile photo
-router.put('/:id/profile-photo', uploadProfilePhoto, userController.updateProfilePhoto); 
+router.put('/:id/profile-photo', authenticateJWT, uploadProfilePhoto, userController.updateProfilePhoto); 
 
 // Route for deleting user profile photo
-router.delete('/:id/profile-photo', userController.deleteProfilePhoto); // Delete user profile photo
+router.delete('/:id/profile-photo', authenticateJWT, userController.deleteProfilePhoto); // Delete user profile photo (protected route)
 
-
-
-// --- --- FireBase
-
-router.post('/forgot-password', userController.forgotPassword);
-router.post('/send-verification-email', userController.sendEmailVerification);
-
+// --- --- FireBase routes
+router.post('/forgot-password', userController.forgotPassword); // No auth required
+router.post('/send-verification-email', authenticateJWT, userController.sendEmailVerification); // Requires auth
 
 module.exports = router;
