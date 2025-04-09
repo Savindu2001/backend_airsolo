@@ -334,7 +334,7 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Verify Firebase credentials (using your logic)
+        // Sign in with Firebase
         const userCredential = await admin.auth().signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
@@ -344,33 +344,83 @@ exports.loginUser = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        // Check if email is verified
+        if (!user.emailVerified) {
+            return res.status(403).json({ message: "Please verify your email before logging in." });
+        }
+
         // Generate JWT
         const token = jwt.sign(
-            { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
+            { uid: dbUser.id, email: dbUser.email, role: dbUser.role }, // Include role in the token
             process.env.JWT_SECRET,
             { expiresIn: "1d" } // Token expires in 1 day
         );
 
-        return res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-                uid: dbUser.id,
-                email: dbUser.email,
-                role: dbUser.role,
-                firstName: dbUser.firstName,
-                lastName: dbUser.lastName,
-                profile_photo: dbUser.profile_photo,
-            },
-        });
+        // Check user role and respond accordingly
+        if (dbUser.role === 'admin') {
+            return res.status(200).json({
+                message: "Login successful",
+                token,
+                user: {
+                    uid: dbUser.id,
+                    email: dbUser.email,
+                    role: dbUser.role,
+                    firstName: dbUser.firstName,
+                    lastName: dbUser.lastName,
+                    profile_photo: dbUser.profile_photo,
+                    dashboard: '/admin/dashboard' // Link to admin dashboard
+                },
+            });
+        } else if (dbUser.role === 'hotelier') {
+            return res.status(200).json({
+                message: "Login successful",
+                token,
+                user: {
+                    uid: dbUser.id,
+                    email: dbUser.email,
+                    role: dbUser.role,
+                    firstName: dbUser.firstName,
+                    lastName: dbUser.lastName,
+                    profile_photo: dbUser.profile_photo,
+                    dashboard: '/hotelier/dashboard' // Link to hotelier dashboard
+                },
+            });
+        } else if (dbUser.role === 'driver') {
+            return res.status(200).json({
+                message: "Login successful",
+                token,
+                user: {
+                    uid: dbUser.id,
+                    email: dbUser.email,
+                    role: dbUser.role,
+                    firstName: dbUser.firstName,
+                    lastName: dbUser.lastName,
+                    profile_photo: dbUser.profile_photo,
+                    dashboard: '/driver/dashboard' // Link to driver dashboard
+                },
+            });
+        } else {
+            return res.status(200).json({
+                message: "Login successful",
+                token,
+                user: {
+                    uid: dbUser.id,
+                    email: dbUser.email,
+                    role: dbUser.role,
+                    firstName: dbUser.firstName,
+                    lastName: dbUser.lastName,
+                    profile_photo: dbUser.profile_photo,
+                    dashboard: '/traveler/home' // Link to traveler home
+                },
+            });
+        }
 
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "Login failed", error: error.message });
     }
 };
-
-
+/// Social Login
 exports.socialLogin = async (req, res) => {
     const { idToken } = req.body;
 
