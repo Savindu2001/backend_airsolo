@@ -15,6 +15,14 @@ This is the backend for **AirSolo**, a travel and hostel management platform. Bu
 
 ---
 
+## JWT Token Generator
+
+> const crypto = require('crypto');
+
+> const secret = crypto.randomBytes(64).toString('hex');
+
+> console.log(secret); 
+
 ## 🚀 Tech Stack
 
 - Node.js + Express
