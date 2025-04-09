@@ -296,94 +296,51 @@ exports.resetPassword = async (req, res) => {
 
 
 
-/// Login 
-
-// exports.loginUser = async (req, res) => {
-//     const { email, password } = req.body;
-
-//     if (!email || !password) {
-//         return res.status(400).json({ message: "Email and password are required" });
-//     }
-
-//     try {
-//         // Sign in with Firebase
-//         // const userCredential = await admin.auth().signInWithEmailAndPassword(email, password);
-//         // const user = userCredential.user;
-
-//         // Check if user exists in MySQL
-//         const dbUser = await User.findOne({ where: { email } });
-//         console.log('DB User:', dbUser); // Log the user object to check role
-//         if (!dbUser) {
-//             return res.status(404).json({ message: "User not found" });
-//         }
-
-//         // Check if email is verified
-//         // const firebaseUser = await admin.auth().getUser(user.uid);
-//         // if (!firebaseUser.emailVerified) {
-//         //     return res.status(403).json({ message: "Please verify your email before logging in." });
-//         // }
-
-//         // Generate JWT
-//         const token = jwt.sign(
-//             { uid: dbUser.id, email: dbUser.email, role: dbUser.role }, // Ensure role is included
-//             process.env.JWT_SECRET,
-//             { expiresIn: "1d" } // Token expires in 1 day
-//         );
-
-//         console.log('Generated JWT:', token); // Log the generated JWT
-
-//         return res.status(200).json({
-//             message: "Login successful",
-//             token,
-//             user: {
-//                 uid: dbUser.id,
-//                 email: dbUser.email,
-//                 role: dbUser.role,
-//                 firstName: dbUser.firstName,
-//                 lastName: dbUser.lastName,
-//                 profile_photo: dbUser.profile_photo,
-//             },
-//         });
-//     } catch (error) {
-//         console.error("Login error:", error);
-//         return res.status(500).json({ message: "Login failed", error: error.message });
-//     }
-// };
-
-
-
+/// Login
 exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
+    const { token } = req.body; // Expecting token from the client
+  
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+  
+    try {
+      // Verify the token
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      const email = decodedToken.email;
+  
+      // Check if user exists in your MySQL database
+      const dbUser = await User.findOne({ where: { email } });
+      if (!dbUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // Generate your own JWT if needed
+      const customToken = jwt.sign(
+        { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+  
+      return res.status(200).json({
+        message: "Login successful",
+        token: customToken,
+        user: {
+          uid: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+          profile_photo: dbUser.profile_photo,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ message: "Login failed", error: error.message });
+    }
+  };
 
-  if (!email || !password)
-    return res.status(400).json({ message: "Email and password are required" });
 
-  try {
-    const dbUser = await User.findOne({ where: { email } });
-    if (!dbUser) return res.status(404).json({ message: "User not found" });
-
-    const isMatch = await bcrypt.compare(password, dbUser.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid password" });
-
-    const token = jwt.sign(
-      { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    return res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        uid: dbUser.id,
-        email: dbUser.email,
-        role: dbUser.role,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ message: "Login failed", error: error.message });
-  }
-};
 
 
 
