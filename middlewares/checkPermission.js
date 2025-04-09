@@ -3,7 +3,13 @@ const { RolePermission, Permission } = require('../models');
 const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {
     try {
-      const userRole = req.user.role; // From decoded JWT
+      console.log('User object:', req.user); // Log user object
+
+      const userRole = req.user.role; 
+
+      if (!userRole) {
+        return res.status(403).json({ message: 'User role is undefined' });
+      }
 
       const permission = await Permission.findOne({ where: { name: requiredPermission } });
       if (!permission) {
@@ -24,7 +30,7 @@ const checkPermission = (requiredPermission) => {
       next(); // User has permission
     } catch (error) {
       console.error('Permission check failed:', error);
-      return res.status(500).json({ message: 'Internal Server Error' });
+      return res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
   };
 };
