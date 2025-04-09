@@ -256,14 +256,14 @@ exports.resetPassword = async (req, res) => {
         });
 
         // Update password in MySQL
-        const user = await User.findByPk(uid);
+        const user = await User.findOne({ where: { firebase_uid: uid } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         // Hash the new password before saving
         user.password = await bcrypt.hash(newPassword, 10);
-        await user.save(); // Save the updated user record
+        await user.save(); 
 
         return res.status(200).json({ message: 'Password reset successfully' });
     } catch (error) {
