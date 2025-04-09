@@ -1,18 +1,17 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-exports.authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
+const authenticateJWT = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
 
-    if (authHeader) {
-        const token = authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ message: 'Access token missing' });
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403); // Invalid token
-
-            req.user = user; // Add user info to request
-            next();
-        });
-    } else {
-        res.sendStatus(401); // No token provided
-    }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // contains uid, email, role, etc.
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid token' });
+  }
 };
+
+module.exports = { authenticateJWT };
