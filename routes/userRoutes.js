@@ -21,5 +21,7 @@ router.delete('/:id/profile-photo', userController.deleteProfilePhoto); // Delet
 // --- --- FireBase
 
 router.post('/forgot-password', userController.forgotPassword);
+router.post('/send-verification-email', userController.sendEmailVerification);
+
 
 module.exports = router;

@@ -272,3 +272,54 @@ exports.resetPassword = async (req, res) => {
     }
 };
  
+
+
+
+// Send email verification controller
+exports.sendEmailVerification = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+        // Get the Firebase user
+        const user = await admin.auth().getUserByEmail(email);
+
+        // Generate the email verification link
+        const link = await admin.auth().generateEmailVerificationLink(email);
+
+        // Send email with Nodemailer
+        await sendEmailWithLink(email, link);
+
+        res.status(200).json({ message: 'Verification email sent successfully' });
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+        res.status(500).json({ message: 'Failed to send verification email', error: error.message });
+    }
+};
+
+// Helper function to send email (you can also move this to a separate utils/mail.js file)
+const sendEmailWithLink = async (email, link) => {
+
+    const mailOptions = {
+        from: `"AirSolo Team" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Verify Your Email',
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Email Verification</h2>
+                <p>Thank you for registering. Please click the link below to verify your email address:</p>
+                <a href="${link}" style="background: #1e90ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+                <p>If you did not create an account, please ignore this email.</p>
+            </div>
+        `,
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+
+
+
