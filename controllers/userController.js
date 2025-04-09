@@ -8,13 +8,21 @@ const s3Client = new S3Client({
 const admin = require('../services/firebaseService');
 const transporter = require('../config/nodemailer');
 const jwt = require("jsonwebtoken");
+const emailController = require('./emailController');
 
-// Controller to create a new user
+
+
+
+
+
+
+
+// Register New User
 exports.createUser = async (req, res) => {
     try {
         const { firstName, lastName, email, country, gender, username, password, role, profile_photo, nic, driving_license_id } = req.body;
 
-        // Check if the required fields are present
+        // Check Validation with Backend
         if (!firstName || !lastName || !email || !username || !password) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
@@ -45,7 +53,11 @@ exports.createUser = async (req, res) => {
             driving_license_id,
         });
 
-        return res.status(201).json({ message: 'User created successfully', user });
+        await emailController.sendEmailVerification(email, res);
+          
+        
+
+        return res.status(200).json({ message: 'User created successfully', user });
     } catch (error) {
         console.error('Error creating user:', error);
         return res.status(500).json({ message: 'An error occurred while creating the user', error });
@@ -151,7 +163,7 @@ exports.updateProfilePhoto = async (req, res) => {
             user.profile_photo = req.file.location; 
         }
 
-        await user.save(); 
+        await user.save();
 
         return res.status(200).json({ message: 'Profile photo updated successfully', user });
     } catch (error) {
@@ -276,108 +288,102 @@ exports.resetPassword = async (req, res) => {
 
 
 
-// Send email verification controller
-exports.sendEmailVerification = async (req, res) => {
-    const { email } = req.body;
 
-    if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
-    }
 
-    try {
-        // Get the Firebase user
-        const user = await admin.auth().getUserByEmail(email);
 
-        // Generate the email verification link
-        const link = await admin.auth().generateEmailVerificationLink(email);
 
-        // Send email with Nodemailer
-        await sendEmailWithLink(email, link);
-
-        res.status(200).json({ message: 'Verification email sent successfully' });
-    } catch (error) {
-        console.error('Error sending verification email:', error);
-        res.status(500).json({ message: 'Failed to send verification email', error: error.message });
-    }
-};
-
-// Helper function to send email (you can also move this to a separate utils/mail.js file)
-const sendEmailWithLink = async (email, link) => {
-
-    const mailOptions = {
-        from: `"AirSolo Team" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Verify Your Email',
-        html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2>Email Verification</h2>
-                <p>Thank you for registering. Please click the link below to verify your email address:</p>
-                <a href="${link}" style="background: #1e90ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-                <p>If you did not create an account, please ignore this email.</p>
-            </div>
-        `,
-    };
-
-    await transporter.sendMail(mailOptions);
-};
 
 
 
 
 /// Login 
 
+// exports.loginUser = async (req, res) => {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//         return res.status(400).json({ message: "Email and password are required" });
+//     }
+
+//     try {
+//         // Sign in with Firebase
+//         // const userCredential = await admin.auth().signInWithEmailAndPassword(email, password);
+//         // const user = userCredential.user;
+
+//         // Check if user exists in MySQL
+//         const dbUser = await User.findOne({ where: { email } });
+//         console.log('DB User:', dbUser); // Log the user object to check role
+//         if (!dbUser) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+
+//         // Check if email is verified
+//         // const firebaseUser = await admin.auth().getUser(user.uid);
+//         // if (!firebaseUser.emailVerified) {
+//         //     return res.status(403).json({ message: "Please verify your email before logging in." });
+//         // }
+
+//         // Generate JWT
+//         const token = jwt.sign(
+//             { uid: dbUser.id, email: dbUser.email, role: dbUser.role }, // Ensure role is included
+//             process.env.JWT_SECRET,
+//             { expiresIn: "1d" } // Token expires in 1 day
+//         );
+
+//         console.log('Generated JWT:', token); // Log the generated JWT
+
+//         return res.status(200).json({
+//             message: "Login successful",
+//             token,
+//             user: {
+//                 uid: dbUser.id,
+//                 email: dbUser.email,
+//                 role: dbUser.role,
+//                 firstName: dbUser.firstName,
+//                 lastName: dbUser.lastName,
+//                 profile_photo: dbUser.profile_photo,
+//             },
+//         });
+//     } catch (error) {
+//         console.error("Login error:", error);
+//         return res.status(500).json({ message: "Login failed", error: error.message });
+//     }
+// };
+
+
+
 exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-    }
+  if (!email || !password)
+    return res.status(400).json({ message: "Email and password are required" });
 
-    try {
-        // Sign in with Firebase
-        const userCredential = await admin.auth().signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+  try {
+    const dbUser = await User.findOne({ where: { email } });
+    if (!dbUser) return res.status(404).json({ message: "User not found" });
 
-        // Check if user exists in MySQL
-        const dbUser = await User.findOne({ where: { email } });
-        console.log('DB User:', dbUser); // Log the user object to check role
-        if (!dbUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
+    const isMatch = await bcrypt.compare(password, dbUser.password);
+    if (!isMatch) return res.status(401).json({ message: "Invalid password" });
 
-        // Check if email is verified
-        const firebaseUser = await admin.auth().getUser(user.uid);
-        if (!firebaseUser.emailVerified) {
-            return res.status(403).json({ message: "Please verify your email before logging in." });
-        }
+    const token = jwt.sign(
+      { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-        // Generate JWT
-        const token = jwt.sign(
-            { uid: dbUser.id, email: dbUser.email, role: dbUser.role }, // Ensure role is included
-            process.env.JWT_SECRET,
-            { expiresIn: "1d" } // Token expires in 1 day
-        );
-
-        console.log('Generated JWT:', token); // Log the generated JWT
-
-        return res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-                uid: dbUser.id,
-                email: dbUser.email,
-                role: dbUser.role,
-                firstName: dbUser.firstName,
-                lastName: dbUser.lastName,
-                profile_photo: dbUser.profile_photo,
-            },
-        });
-    } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({ message: "Login failed", error: error.message });
-    }
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        uid: dbUser.id,
+        email: dbUser.email,
+        role: dbUser.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Login failed", error: error.message });
+  }
 };
-
 
 
 

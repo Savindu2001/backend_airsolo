@@ -17,7 +17,6 @@ const cityRoutes = require('./routes/cityRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const activityEventRoutes = require('./routes/activityEventRoutes');
 const tripGenieRoutes = require('./routes/tripGenie'); 
-const adminRoutes = require('./routes/adminRoutes');
 
 
 
@@ -50,7 +49,6 @@ app.use('/api/information', informationRoutes);
 app.use('/api/activity-events', activityEventRoutes);
 app.use('/api/tripgenie', tripGenieRoutes);
 app.use('/api/taxi-booking',taxiBookingRoutes);
-app.use('/api/admin', adminRoutes);
 
 
 
