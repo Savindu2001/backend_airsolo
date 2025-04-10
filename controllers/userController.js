@@ -27,17 +27,31 @@ exports.createUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
+        // Check if email or username already exists
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+
+        const existingUsername = await User.findOne({ where: { username } });
+        if (existingUsername) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+
+        
+
         // Create user in Firebase Authentication
         const userRecord = await admin.auth().createUser({
             email,
             password,
             displayName: `${firstName} ${lastName}`,
+            emailVerified: false 
         });
 
         // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the user
+        // Create the user in your database
         const user = await User.create({
             id: userRecord.uid,
             firstName,
@@ -47,22 +61,45 @@ exports.createUser = async (req, res) => {
             gender,
             username,
             password: hashedPassword,
-            role,
+            role: role || 'traveler', // Default role if not provided
             profile_photo,
             nic,
             driving_license_id,
         });
 
+        // Send verification email
         await emailController.sendEmailVerification(email, res);
-          
-        
 
-        return res.status(200).json({ message: 'User created successfully', user });
+        // Don't return the hashed password in the response
+        const userResponse = { ...user.toJSON() };
+        delete userResponse.password;
+
+        return res.status(200).json({ 
+            message: 'User created successfully', 
+            user: userResponse 
+        });
+        
     } catch (error) {
         console.error('Error creating user:', error);
-        return res.status(500).json({ message: 'An error occurred while creating the user', error });
+        
+        // Handle specific Firebase errors
+        if (error.code === 'auth/email-already-exists') {
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+        
+        // Handle other specific errors as needed
+        
+        return res.status(500).json({ 
+            message: 'An error occurred while creating the user', 
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+        });
     }
 };
+
+
+
+
+
 
 // Controller to get all users
 exports.getAllUsers = async (req, res) => {
@@ -295,7 +332,6 @@ exports.resetPassword = async (req, res) => {
 
 
 
-
 /// Login
 exports.loginUser = async (req, res) => {
     const { token } = req.body; // Expecting token from the client
@@ -309,12 +345,14 @@ exports.loginUser = async (req, res) => {
       const decodedToken = await admin.auth().verifyIdToken(token);
       const email = decodedToken.email;
   
-      // Check if user exists in your MySQL database
+      // Check if user exists in MySQL (REQUIRED)
       const dbUser = await User.findOne({ where: { email } });
       if (!dbUser) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(403).json({ 
+          message: "User not registered in the system. Please sign up first." 
+        });
       }
-  
+
       // Generate your own JWT if needed
       const customToken = jwt.sign(
         { uid: dbUser.id, email: dbUser.email, role: dbUser.role },
@@ -336,12 +374,21 @@ exports.loginUser = async (req, res) => {
       });
     } catch (error) {
       console.error("Login error:", error);
-      return res.status(500).json({ message: "Login failed", error: error.message });
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/id-token-expired') {
+        return res.status(401).json({ message: "Token expired. Please log in again." });
+      }
+      if (error.code === 'auth/argument-error') {
+        return res.status(400).json({ message: "Invalid token." });
+      }
+      
+      return res.status(500).json({ 
+        message: "Login failed", 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
     }
-  };
-
-
-
+};
 
 
 /// Social Login
