@@ -10,7 +10,7 @@ const checkRole = require('../middlewares/checkRole');
 
 router.post('/register', userController.createUser); 
 router.post('/login', userController.loginUser);
-router.get('/', authenticateJWT, checkRole(['admin']), userController.getAllUsers); 
+router.get('/', authenticateJWT, checkRole(['traveler']), userController.getAllUsers); 
 router.get('/:id', authenticateJWT, checkRole(['admin']),  userController.getUserById); 
 router.put('/:id', authenticateJWT, checkRole(['admin']),  userController.updateUser); // Update user (protected route)
 router.delete('/:id', authenticateJWT , checkRole(['admin']),  userController.deleteUser); // Delete user (protected route)
