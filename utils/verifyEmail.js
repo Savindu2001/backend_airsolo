@@ -15,6 +15,8 @@ const sendEmailWithLink = async (email, link) => {
                 <p>Thank you for registering. Please click the link below to verify your email address:</p>
                 <a href="${link}" style="background: #1e90ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
                 <p>If you did not create an account, please ignore this email.</p>
+                </br>
+                <p>${link}</p>
             </div>
         `,
     };

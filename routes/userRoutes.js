@@ -21,9 +21,14 @@ router.put('/:id/profile-photo', authenticateJWT, uploadProfilePhoto, userContro
 // Route for deleting user profile photo
 router.delete('/:id/profile-photo', authenticateJWT, userController.deleteProfilePhoto); // Delete user profile photo (protected route)
 
-// --- --- FireBase routes
-router.post('/forgot-password', userController.forgotPassword); // No auth required
-router.post('/send-verification-email',emailController.sendEmailVerification); // Requires auth authenticateJWT, 
+// --- Account
+router.post('/forgot-password', userController.forgotPassword); 
+router.post('/reset-password', userController.resetPassword);
+
+
+// -- Email -- //
+router.post('/verify-email',emailController.sendEmailVerification); 
+router.post('/verify-email/check', emailController.checkEmailVerification);
 
 
 

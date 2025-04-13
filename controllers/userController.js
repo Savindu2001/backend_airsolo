@@ -293,7 +293,7 @@ exports.forgotPassword = async (req, res ) => {
 /// Password reset update
 
 exports.resetPassword = async (req, res) => {
-    const { uid, newPassword } = req.body; // uid: Firebase user ID, newPassword: New password
+    const { uid, newPassword } = req.body; 
 
     if (!uid || !newPassword) {
         return res.status(400).json({ message: 'User ID and new password are required' });
@@ -306,7 +306,7 @@ exports.resetPassword = async (req, res) => {
         });
 
         // Update password in MySQL
-        const user = await User.findOne({ where: { firebase_uid: uid } });
+        const user = await User.findOne({ where: { id: uid } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
