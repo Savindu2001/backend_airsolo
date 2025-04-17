@@ -390,48 +390,137 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-
 /// Social Login
 exports.socialLogin = async (req, res) => {
-    const { idToken } = req.body;
+    const { idToken, provider } = req.body;
 
-    if (!idToken) {
-        return res.status(400).json({ message: "ID token is required" });
+    // Validate input
+    if (!idToken || !provider) {
+        return res.status(400).json({ 
+            success: false,
+            message: "ID token and provider are required" 
+        });
     }
 
     try {
-        // ✅ Verify Firebase ID token
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const { uid, email, name, picture } = decodedToken;
+        // 1️⃣ Verify Firebase ID token with additional checks
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true); // Check revoked
+        const { uid, email, name, picture, email_verified } = decodedToken;
 
-        // 🔍 Check if user exists in MySQL
-        let user = await User.findByPk(uid);
-
-        if (!user) {
-            // 🆕 Create new user in MySQL if not exists
-            user = await User.create({
-                id: uid,
-                email,
-                firstName: name?.split(" ")[0] || "",
-                lastName: name?.split(" ")[1] || "",
-                profile_photo: picture,
-                country: "Australia", // default or from frontend
-                role: "user",
-                password: null, // or mark as social login
+        if (!email || !email_verified) {
+            return res.status(403).json({
+                success: false,
+                message: "Email not verified or not provided by provider"
             });
         }
 
-        // 🎫 Create JWT (optional)
-        const token = jwt.sign({ uid: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+        // 2️⃣ Find or create user with transaction
+        const [user, created] = await User.findOrCreate({
+            where: { id: uid },
+            defaults: {
+                id: uid,
+                email,
+                firstName: name?.split(" ")[0] || email.split("@")[0],
+                lastName: name?.split(" ").slice(1).join(" ") || "",
+                profile_photo: picture || `${process.env.DEFAULT_AVATAR_URL}?name=${encodeURIComponent(email)}`,
+                provider,
+                role: "user", // Or determine role based on business logic
+                email_verified: true,
+                last_login: new Date()
+            },
+            transaction: await sequelize.transaction() // Ensure atomic operation
+        });
+
+        // 3️⃣ Update user if not newly created
+        if (!created) {
+            await user.update({
+                last_login: new Date(),
+                profile_photo: picture || user.profile_photo
+            }, { transaction });
+        }
+
+        // 4️⃣ Generate secure JWT with refresh token
+        const token = jwt.sign(
+            { 
+                uid: user.id,
+                email: user.email,
+                role: user.role 
+            }, 
+            process.env.JWT_SECRET,
+            { 
+                expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+                issuer: process.env.JWT_ISSUER 
+            }
+        );
+
+        const refreshToken = jwt.sign(
+            { uid: user.id },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // 5️⃣ Set secure HTTP-only cookies
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 3600000 // 1 hour
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 604800000 // 7 days
+        });
+
+        // 6️⃣ Commit transaction
+        await transaction.commit();
 
         return res.status(200).json({
+            success: true,
             message: "Login successful",
-            token,
-            user,
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                profile_photo: user.profile_photo
+            },
+            // Only return tokens in development for testing
+            ...(process.env.NODE_ENV !== 'production' && { 
+                token, 
+                refreshToken 
+            })
         });
+
     } catch (error) {
+        // Rollback transaction if it exists
+        if (transaction) await transaction.rollback();
+        
         console.error("Social login error:", error);
-        return res.status(500).json({ message: "Social login failed", error: error.message });
+
+        // Handle specific Firebase errors
+        if (error.code === 'auth/id-token-revoked') {
+            return res.status(401).json({
+                success: false,
+                message: "Token revoked - please sign in again"
+            });
+        }
+
+        if (error.code === 'auth/id-token-expired') {
+            return res.status(401).json({
+                success: false,
+                message: "Token expired - please sign in again"
+            });
+        }
+
+        return res.status(500).json({ 
+            success: false,
+            message: "Authentication failed",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 

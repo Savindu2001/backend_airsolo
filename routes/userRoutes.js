@@ -31,6 +31,10 @@ router.post('/verify-email',emailController.sendEmailVerification);
 router.post('/verify-email/check', emailController.checkEmailVerification);
 
 
+// -- social logins -- //
+router.post('/social-login', authenticateJWT, userController.socialLogin);
+
+
 
 
 module.exports = router;
