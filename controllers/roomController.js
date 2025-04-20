@@ -1,9 +1,11 @@
 const { Room, HostelBooking} = require('../models');
-const { Op } = require('sequelize'); 
+const { Op, where } = require('sequelize'); 
 
 exports.createRoom = async (req, res) => {
     try {
-        const { hostel_id, name, type, bed_type, bed_qty, max_occupancy, price_per_person, images, facility_ids } = req.body;
+        const { hostel_id, name, type, bed_type, bed_qty, max_occupancy, price_per_person, facility_ids } = req.body;
+
+        const images = req.body.images || [];
 
         // Create the room
         const room = await Room.create({
@@ -14,7 +16,7 @@ exports.createRoom = async (req, res) => {
             bed_qty,
             max_occupancy,
             price_per_person,
-            images,
+            images : images,
             facility_ids,
         });
 
@@ -48,6 +50,25 @@ exports.getRoomById = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
+
+exports.getRoomByHostelId = async (req, res) => {
+    try {
+        const rooms = await Room.findAll({
+            where: { hostel_id: req.params.hostel_id }
+        });
+
+        if (rooms.length === 0) {
+            return res.status(404).json({ message: 'No rooms found for this hostel' });
+        }
+
+        res.status(200).json(rooms);
+    } catch (error) {
+        res.status(500).json({ message: 'Error', error: error.message });
+    }
+};
+
+
 
 // Update a room
 exports.updateRoom = async (req, res) => {

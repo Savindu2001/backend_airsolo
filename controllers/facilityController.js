@@ -41,6 +41,8 @@ exports.getFacilityById = async (req, res) => {
     }
 };
 
+
+
 // Update a facility by ID
 exports.updateFacility = async (req, res) => {
     try {

@@ -1,3 +1,4 @@
+const { where } = require('sequelize');
 const { HouseRule } = require('../models');
 
 
@@ -44,6 +45,8 @@ exports.getHouseRuleById = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
+
 
 // Update a house rule by ID
 exports.updateHouseRule = async (req, res) => {

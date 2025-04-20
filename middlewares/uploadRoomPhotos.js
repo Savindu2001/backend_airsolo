@@ -8,31 +8,33 @@ const upload = multer({
 });
 
 // Middleware for uploading images
-const uploadHostelImages = upload.fields([
-  { name: 'gallery', maxCount: 6 }, // Gallery images
+const uploadRoomImages = upload.fields([
+  { name: 'images', maxCount: 4 }, // Gallery images
 ]);
 
-
 // Custom upload function
+
 const uploadToS3 = async (req, res, next) => {
     try {
-        // Upload gallery images
-        if (req.files.gallery) {
-            req.body.gallery = [];
-            for (const galleryFile of req.files.gallery) {
-                const galleryImageKey = `hostels/${hostelId}/gallery/${Date.now()}_${galleryFile.originalname}`;
+        
+
+        // Upload room images
+        if (req.files.images) {
+            req.body.images = [];
+            for (const imagesFile of req.files.images) {
+                const roomImagesKey = `Rooms/${Date.now()}_${imagesFile.originalname}`;
 
                 await s3Client.send(
                     new PutObjectCommand({
                         Bucket: process.env.AWS_BUCKET_NAME,
-                        Key: galleryImageKey,
-                        Body: galleryFile.buffer,
-                        ContentType: galleryFile.mimetype, // Set the content type
+                        Key: roomImagesKey,
+                        Body: imagesFile.buffer,
+                        ContentType: imagesFile.mimetype, 
                     })
                 );
 
-                // Set the URL for each gallery image
-                req.body.gallery.push(`https://${process.env.AWS_BUCKET_NAME}.s3-ap-southeast-1.amazonaws.com/${galleryImageKey}`);
+                // Set the URL for each room image
+                req.body.images.push(`https://${process.env.AWS_BUCKET_NAME}.s3-ap-southeast-1.amazonaws.com/${roomImagesKey}`);
             }
         }
 
@@ -44,4 +46,4 @@ const uploadToS3 = async (req, res, next) => {
 };
 
 
-module.exports = { uploadHostelImages, uploadToS3 };
+module.exports = { uploadRoomImages, uploadToS3 };
