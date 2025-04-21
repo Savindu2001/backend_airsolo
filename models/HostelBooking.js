@@ -50,6 +50,10 @@ module.exports = (sequelize) => {
       allowNull: false,
       field: 'num_guests',
     },
+    amount: {
+      type: DataTypes.DOUBLE,
+      field: 'amount',
+    },
     specialRequests: {
       type: DataTypes.TEXT,
       field: 'special_requests',

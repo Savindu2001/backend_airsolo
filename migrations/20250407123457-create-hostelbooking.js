@@ -55,6 +55,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      amount: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
       special_requests: {
         type: Sequelize.TEXT,
         allowNull: true,

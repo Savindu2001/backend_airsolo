@@ -13,6 +13,7 @@ const createBooking = async (req, res) => {
       checkInDate,
       checkOutDate,
       numGuests,
+      amount,
       specialRequests,
     } = req.body;
 
@@ -27,10 +28,10 @@ const createBooking = async (req, res) => {
       where: {
         roomId,
         checkInDate: {
-          [Op.lt]: checkOutDate, // Current check-in date must be before desired check-out date
+          [Op.lt]: checkOutDate, 
         },
         checkOutDate: {
-          [Op.gt]: checkInDate, // Current check-out date must be after desired check-in date
+          [Op.gt]: checkInDate, 
         },
       },
     });
@@ -49,6 +50,7 @@ const createBooking = async (req, res) => {
       checkInDate,
       checkOutDate,
       numGuests,
+      amount,
       specialRequests,
       status: 'pending', // Default status
     });
