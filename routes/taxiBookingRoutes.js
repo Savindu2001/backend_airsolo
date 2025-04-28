@@ -1,20 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { bookingTaxi, updateBookingStatus ,getAvailableSharedBookings ,joinSharedBooking} = require('../controllers/taxiBookingController');
+const taxiBookingController = require('../controllers/taxiBookingController');
 
-// Route to book a taxi
-router.post('/', bookingTaxi);
+// Create new taxi booking
+router.post('/create', taxiBookingController.createTaxiBooking);
 
-// Route to update booking status
-router.patch('/update-booking/:bookingId', updateBookingStatus);
+// Update booking status
+router.patch('/update-booking/:bookingId', taxiBookingController.updateTaxiBookingStatus);
 
-// Get Shared Booking
-router.get('/shared-available', getAvailableSharedBookings);
+// Get available shared bookings
+router.get('/shared-available', taxiBookingController.getAvailableSharedBookings);
 
-// Join to Shared Booking
-router.post('/join/:bookingId', joinSharedBooking);
+// Join a shared booking
+router.post('/join/:bookingId', taxiBookingController.joinSharedBooking);
 
-// Update Booking Status
-router.put('/:bookingId/status',updateBookingStatus);
+// Get available drivers
+router.post('/available-drivers', taxiBookingController.getAvailableDrivers);
+
+
 
 module.exports = router;

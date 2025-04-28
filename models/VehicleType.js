@@ -8,7 +8,6 @@ class VehicleType extends Model {
   }
 }
 
-// Export the VehicleType model
 module.exports = (sequelize) => {
   VehicleType.init({
     id: {
@@ -20,11 +19,11 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('Tuk Tuk', 'Car', 'Van', 'SUV'),
       allowNull: false,
     },
-    priceFor5Km: {  // Base price for the first 5 km
+    priceFor5Km: {  
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    additionalPricePerKm: { // Additional price for each kilometer after 5 km
+    additionalPricePerKm: { 
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },

@@ -5,11 +5,13 @@ const { Model, DataTypes } = require('sequelize');
 class Vehicle extends Model {
   static associate(models) {
     this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId' });
-    this.belongsTo(models.User, {foreignKey: 'driver_id'} );
+    this.belongsTo(models.User, { as: 'driver', foreignKey: 'driver_id' });
+    this.hasOne(models.HostVerification, { foreignKey: 'userId', as: 'status' }); 
+
   }
 }
 
-// Export the Vehicle model
+
 module.exports = (sequelize) => {
   Vehicle.init({
     id: {
@@ -20,7 +22,7 @@ module.exports = (sequelize) => {
     vehicle_number: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // Ensure vehicle number is unique
+      unique: true, 
     },
     driver_id: {
       type: DataTypes.UUID,
@@ -37,9 +39,38 @@ module.exports = (sequelize) => {
       },
       allowNull: false,
     },
-    number_of_seats: {
+    numberOfSeats: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    model: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    year: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    color: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    isAvailable: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      field: 'is_available'
+    },
+    currentLat: {
+      type: DataTypes.DOUBLE,
+      field: 'current_lat'
+    },
+    currentLng: {
+      type: DataTypes.DOUBLE,
+      field: 'current_lng'
+    },
+    fcmToken: {
+      type: DataTypes.STRING,
+      field: 'fcm_token'
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -52,7 +83,7 @@ module.exports = (sequelize) => {
       field: 'updated_at',
     },
   }, {
-    sequelize, // Ensure this is passed correctly
+    sequelize, 
     modelName: 'Vehicle',
     tableName: 'vehicles',
     timestamps: true,

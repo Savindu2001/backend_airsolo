@@ -61,7 +61,7 @@ exports.createUser = async (req, res) => {
             gender,
             username,
             password: hashedPassword,
-            role: role || 'traveler', // Default role if not provided
+            role: role || 'traveler', 
             profile_photo,
             nic,
             driving_license_id,

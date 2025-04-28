@@ -24,6 +24,30 @@ module.exports = {
           key: 'id',
         },
       },
+      pickupLocation: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      dropLocation: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      pickupLat: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
+      pickupLng: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
+      dropLat: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
+      dropLng: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
       distance: {
         type: Sequelize.FLOAT,
         allowNull: false,
@@ -55,10 +79,40 @@ module.exports = {
         defaultValue: Sequelize.NOW,
       },
       status: {
-        type: Sequelize.ENUM('pending', 'confirmed', 'canceled'),
+        type: Sequelize.ENUM(
+          'pending', 
+        'driver_accepted',
+        'driver_rejected',
+        'driver_arrived',
+        'ride_started',
+        'ride_completed',
+        'cancelled'
+        ),
         allowNull: false,
         defaultValue: 'pending',
       },
+      paymentStatus: {
+            type: Sequelize.ENUM(
+              'pending',
+              'paid',
+              'failed',
+              'refunded'
+            ),
+            defaultValue: 'pending',
+            field: 'payment_status'
+          },
+          scheduledAt: {
+                type: Sequelize.DATE,
+                field: 'scheduled_at'
+              },
+              startedAt: {
+                type: Sequelize.DATE,
+                field: 'started_at'
+              },
+              completedAt: {
+                type: Sequelize.DATE,
+                field: 'completed_at'
+              },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

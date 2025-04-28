@@ -32,6 +32,32 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
+    pickupLocation: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    dropLocation: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    pickupLat: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    },
+    pickupLng: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    },
+    dropLat: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    },
+    dropLng: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    },
+    
+    
     distance: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -63,9 +89,39 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.NOW,
     },
     status: {
-      type: DataTypes.ENUM('pending', 'confirmed', 'canceled'),
-      allowNull: false,
+      type: DataTypes.ENUM(
+        'pending', 
+        'driver_accepted',
+        'driver_rejected',
+        'driver_arrived',
+        'ride_started',
+        'ride_completed',
+        'cancelled'
+      ),
       defaultValue: 'pending',
+      allowNull: false,
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM(
+        'pending',
+        'paid',
+        'failed',
+        'refunded'
+      ),
+      defaultValue: 'pending',
+      field: 'payment_status'
+    },
+    scheduledAt: {
+      type: DataTypes.DATE,
+      field: 'scheduled_at'
+    },
+    startedAt: {
+      type: DataTypes.DATE,
+      field: 'started_at'
+    },
+    completedAt: {
+      type: DataTypes.DATE,
+      field: 'completed_at'
     },
     createdAt: {
         type: DataTypes.DATE,

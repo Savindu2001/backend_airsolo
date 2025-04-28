@@ -43,13 +43,13 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/house-rules', houseRuleRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/vehicle-type', vehicleTypeRoutes);
+app.use('/api/taxi-booking',taxiBookingRoutes);
 app.use('/api/host', hostVerificationRoutes); 
 app.use('/api/bookings', hostelBookingRoutes);
 app.use('/api/city', cityRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/activity-events', activityEventRoutes);
 app.use('/api/tripgenie', tripGenieRoutes);
-app.use('/api/taxi-booking',taxiBookingRoutes);
 app.use('/api/paymentcards', paymentCardRoutes);
 
 

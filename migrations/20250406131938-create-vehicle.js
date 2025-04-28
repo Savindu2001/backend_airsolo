@@ -34,10 +34,39 @@ module.exports = {
            onDelete: 'CASCADE', 
            onUpdate: 'CASCADE', 
          },
-      number_of_seats: {
+        numberOfSeats: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      model: {
+            type: Sequelize.STRING,
+            allowNull: false
+          },
+          year: {
+            type: Sequelize.INTEGER,
+            allowNull: false
+          },
+          color: {
+            type: Sequelize.STRING,
+            allowNull: false
+          },
+          isAvailable: {
+            type: Sequelize.BOOLEAN,
+            defaultValue: true,
+            field: 'is_available'
+          },
+          currentLat: {
+            type: Sequelize.DOUBLE,
+            field: 'current_lat'
+          },
+          currentLng: {
+            type: Sequelize.DOUBLE,
+            field: 'current_lng'
+          },
+          fcmToken: {
+            type: Sequelize.STRING,
+            field: 'fcm_token'
+          },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
