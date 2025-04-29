@@ -3,7 +3,7 @@ const { Model, DataTypes } = require('sequelize');
 
 class TaxiBooking extends Model {
   static associate(models) {
-    this.belongsTo(models.User, { foreignKey: 'travelerId' });
+    this.belongsTo(models.User, { as : 'traveler', foreignKey: 'travelerId' });
     this.belongsTo(models.Vehicle, { foreignKey: 'vehicleId' });
   }
 }
@@ -26,7 +26,7 @@ module.exports = (sequelize) => {
     },
     vehicleId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: null,
       references: {
         model: 'vehicles',
         key: 'id',

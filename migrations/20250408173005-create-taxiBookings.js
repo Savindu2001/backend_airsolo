@@ -18,7 +18,7 @@ module.exports = {
       },
       vehicleId: {
         type: Sequelize.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'vehicles', // Ensure the vehicles table exists
           key: 'id',

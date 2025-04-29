@@ -14,12 +14,14 @@ router.put('/:id', authenticateJWT , vehicleController.updateVehicle);
 router.get('/:id', authenticateJWT , vehicleController.getVehicle);
 
 // Toggle vehicle availability
-router.put('/:id/availability', authenticateJWT , vehicleController.toggleAvailability);
+router.put('/v2/availability', authenticateJWT , vehicleController.toggleAvailability);
 
 // Update vehicle location
 router.put('/:id/location', authenticateJWT , vehicleController.updateLocation);
 
 // Get available vehicles
 router.get('/available', authenticateJWT , vehicleController.getAvailableVehicles);
+
+
 
 module.exports = router;

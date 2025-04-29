@@ -111,9 +111,17 @@ exports.getVehicle = async (req, res) => {
   }
 };
 
-// Toggle vehicle availability
+
+
+
+// online & offline
 exports.toggleAvailability = async (req, res) => {
   try {
+    // Validate input
+    if (typeof req.body.is_available !== 'boolean') {
+      return res.status(400).json({ message: 'is_available must be a boolean' });
+    }
+
     const vehicle = await Vehicle.findOne({ 
       where: { driver_id: req.user.uid },
       include: [{ model: HostVerification, as: 'status' }]
@@ -123,26 +131,29 @@ exports.toggleAvailability = async (req, res) => {
       return res.status(404).json({ message: 'Vehicle not found' });
     }
 
-    // Check if driver documents are verified
-    // if (vehicle.status !== 'approved'){
-    //   return res.status(400).json({ 
-    //     message: 'Driver documents must be verified before going online' 
-    //   });
-    // }
+    await vehicle.update({ isAvailable: req.body.is_available });
 
-    // Toggle availability
-    await vehicle.update({ 
-      isAvailable: !vehicle.isAvailable 
+    // Return the full updated vehicle object
+    const updatedVehicle = await Vehicle.findOne({
+      where: { driver_id: req.user.uid },
+      include: [{ model: HostVerification, as: 'status' }]
     });
 
     res.status(200).json({
       message: `Vehicle is now ${vehicle.isAvailable ? 'online' : 'offline'}`,
-      isAvailable: vehicle.isAvailable
+      ...updatedVehicle.toJSON()
     });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to toggle availability', error: error.message });
+    console.error('Toggle availability error:', error);
+    res.status(500).json({ 
+      message: 'Failed to toggle availability',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
+
+
+
 
 // Update vehicle location
 exports.updateLocation = async (req, res) => {

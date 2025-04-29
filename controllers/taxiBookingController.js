@@ -32,7 +32,7 @@ exports.createTaxiBooking = async (req, res) => {
     const totalFare = isShared ? (calculateFare(vehicleType, distance) / seatsToBook) : calculateFare(vehicleType, distance);
 
     const booking = await TaxiBooking.create({
-      travelerId: req.user.id,
+      travelerId: req.user.uid,
       pickupLocation, dropLocation,
       pickupLat, pickupLng, dropLat, dropLng,
       vehicleTypeId,
@@ -40,7 +40,7 @@ exports.createTaxiBooking = async (req, res) => {
       totalPrice: totalFare,
       isShared,
       seatsToShare: isShared ? seatsToBook : null,
-      travelerIds: [req.user.id],
+      travelerIds: [req.user.uid],
       bookedSeats: isShared ? seatsToBook : 1,
       scheduledAt: scheduledAt || null,
       status: 'pending',
@@ -63,6 +63,8 @@ exports.createTaxiBooking = async (req, res) => {
         { model: VehicleType, as: 'vehicleType' }
       ]
     });
+    console.log("Available Vehicles:", availableVehicles);
+
 
     // Notify available drivers
     for (const vehicle of availableVehicles) {
@@ -82,6 +84,18 @@ exports.createTaxiBooking = async (req, res) => {
     res.status(500).json({ message: 'Failed to create booking', error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Get booking details
 exports.getTaxiBooking = async (req, res) => {
@@ -108,6 +122,10 @@ exports.getTaxiBooking = async (req, res) => {
   }
 };
 
+
+
+
+
 // Driver accepts booking
 exports.acceptTaxiBooking = async (req, res) => {
   try {
@@ -120,7 +138,7 @@ exports.acceptTaxiBooking = async (req, res) => {
     }
 
     const vehicle = await Vehicle.findOne({ 
-      where: { driverId: req.user.id },
+      where: { driverId: req.user.uid },
       include: [{ model: VehicleType }]
     });
     if (!vehicle) return res.status(404).json({ message: 'Driver vehicle not found' });

@@ -4,7 +4,7 @@ const { Model, DataTypes } = require('sequelize');
 
 class Vehicle extends Model {
   static associate(models) {
-    this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId' });
+    this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId',as: 'vehicleType' });
     this.belongsTo(models.User, { as: 'driver', foreignKey: 'driver_id' });
     this.hasOne(models.HostVerification, { foreignKey: 'userId', as: 'status' }); 
 
