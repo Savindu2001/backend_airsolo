@@ -6,7 +6,12 @@ class Vehicle extends Model {
   static associate(models) {
     this.belongsTo(models.VehicleType, { foreignKey: 'vehicleTypeId',as: 'vehicleType' });
     this.belongsTo(models.User, { as: 'driver', foreignKey: 'driver_id' });
-    this.hasOne(models.HostVerification, { foreignKey: 'userId', as: 'status' }); 
+    this.hasOne(models.HostVerification, { foreignKey: 'userId', as: 'status' });
+    Vehicle.hasMany(models.TaxiBooking, {
+      foreignKey: 'vehicleId',
+      as: 'bookings'
+    });
+     
 
   }
 }

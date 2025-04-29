@@ -3,25 +3,21 @@ const router = express.Router();
 const taxiBookingController = require('../controllers/taxiBookingController');
 const { authenticateJWT } = require('../middlewares/auth');
 
-// Create new taxi booking
-router.post('/create',authenticateJWT, taxiBookingController.createTaxiBooking);
 
-// Update booking status
-router.patch('/update-booking/:bookingId',authenticateJWT, taxiBookingController.updateTaxiBookingStatus);
 
-// Get available shared bookings
-router.get('/shared-available',authenticateJWT, taxiBookingController.getAvailableSharedBookings);
 
-// Join a shared booking
-router.post('/join/:bookingId',authenticateJWT, taxiBookingController.joinSharedBooking);
+// Customer
+router.post('/create', authenticateJWT, taxiBookingController.createTaxiBooking);
+router.post('/join/:bookingId', authenticateJWT, taxiBookingController.joinSharedBooking);
+router.post('/available-drivers', authenticateJWT, taxiBookingController.getAvailableDrivers);
+router.put('/update-booking/:bookingId', authenticateJWT, taxiBookingController.updateTaxiBookingStatus);
+router.put('/booking-payment/:bookingId', authenticateJWT, taxiBookingController.updatePaymentStatus);
+router.get('/all', authenticateJWT, taxiBookingController.getAllTaxiBookings);
 
-// Get available drivers
-router.post('/available-drivers',authenticateJWT, taxiBookingController.getAvailableDrivers);
+// Driver
+router.get('/driver-nearby', authenticateJWT, taxiBookingController.getNearbyBookings);
+router.get('/driver-accept/:bookingId', authenticateJWT, taxiBookingController.getAcceptedBooking);
 
-//Get Driver Bookings
-router.get('/driver', authenticateJWT, taxiBookingController.getDriverBookings);
 
-//Accept Booking by Driver
-router.post('/driver-accept', authenticateJWT, taxiBookingController.acceptTaxiBooking);
 
 module.exports = router;

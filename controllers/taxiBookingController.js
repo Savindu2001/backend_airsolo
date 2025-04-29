@@ -4,6 +4,8 @@ const { notifyDriver, notifyUser } = require('../services/notificationService');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 
+
+
 // Calculate fare based on vehicle type and distance
 const calculateFare = (vehicleType, distance) => {
   if (distance <= 5) return parseFloat(vehicleType.priceFor5Km);
@@ -87,208 +89,192 @@ exports.createTaxiBooking = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-// Get booking details
-exports.getTaxiBooking = async (req, res) => {
+// Get all taxi bookings (admin view)
+exports.getAllTaxiBookings = async (req, res) => {
   try {
-    const booking = await TaxiBooking.findByPk(req.params.id, {
+    const { status, isShared } = req.query;
+    
+    const whereClause = {};
+    if (status) whereClause.status = status;
+    if (isShared) whereClause.isShared = isShared === 'true';
+    
+    const bookings = await TaxiBooking.findAll({
+      where: whereClause,
       include: [
         { model: User, as: 'traveler' },
-        { model: Vehicle, as: 'vehicle', include: [{ model: User, as: 'driver' }] },
-        { model: VehicleType, as: 'vehicleType' }
-      ]
+        { model: Vehicle, as: 'assignedVehicle', include: [{ model: User, as: 'driver' }] },
+        
+      ],
+      order: [['createdAt', 'DESC']]
     });
-
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
-    // Only traveler or driver can view booking
-    if (booking.travelerId !== req.user.id && 
-        (!booking.vehicle || booking.vehicle.driverId !== req.user.id)) {
-      return res.status(403).json({ message: 'Unauthorized to view this booking' });
-    }
-
-    res.status(200).json(booking);
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to get booking', error: error.message });
-  }
-};
-
-
-
-
-
-// Driver accepts booking
-exports.acceptTaxiBooking = async (req, res) => {
-  try {
-    const booking = await TaxiBooking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
-    // Check if booking is already assigned
-    if (booking.vehicleId) {
-      return res.status(400).json({ message: 'Booking already assigned to another driver' });
-    }
-
-    const vehicle = await Vehicle.findOne({ 
-      where: { driverId: req.user.uid },
-      include: [{ model: VehicleType }]
-    });
-    if (!vehicle) return res.status(404).json({ message: 'Driver vehicle not found' });
-
-    if (vehicle.vehicleTypeId !== booking.vehicleTypeId)
-      return res.status(400).json({ message: 'Vehicle type mismatch' });
-
-    // For shared rides, check available seats
-    if (booking.isShared && vehicle.number_of_seats < booking.bookedSeats) {
-      return res.status(400).json({ 
-        message: `Vehicle only has ${vehicle.number_of_seats} seats available` 
-      });
-    }
-
-    booking.vehicleId = vehicle.id;
-    booking.status = 'driver_accepted';
-    await booking.save();
-
-    await notifyUser(booking.travelerId, { 
-      title: 'Driver Accepted', 
-      body: 'Your driver is coming!', 
-      data: { bookingId: booking.id } 
-    });
-
-    res.status(200).json({ message: 'Booking accepted', booking });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to accept booking', error: error.message });
-  }
-};
-
-// Update booking status (driver)
-exports.updateTaxiBookingStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    const booking = await TaxiBooking.findByPk(req.params.id, {
-      include: [{ model: Vehicle, as: 'vehicle' }]
-    });
-
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
-    // Check if driver owns the vehicle in booking
-    if (!booking.vehicle || booking.vehicle.driverId !== req.user.id) {
-      return res.status(403).json({ message: 'Unauthorized to update this booking' });
-    }
-
-    // Validate status transition
-    const validTransitions = {
-      'pending': ['driver_accepted', 'cancelled'],
-      'driver_accepted': ['driver_arrived', 'cancelled'],
-      'driver_arrived': ['ride_started', 'cancelled'],
-      'ride_started': ['ride_completed']
-    };
-
-    if (!validTransitions[booking.status] || 
-        !validTransitions[booking.status].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status transition' });
-    }
-
-    booking.status = status;
     
-    // Set timestamps
-    if (status === 'ride_started') booking.startedAt = new Date();
-    if (status === 'ride_completed') booking.completedAt = new Date();
-
-    await booking.save();
-
-    // Notify traveler
-    const notifications = {
-      'driver_accepted': { title: 'Driver Accepted', body: 'Your driver is coming!' },
-      'driver_arrived': { title: 'Driver Arrived', body: 'Your driver has arrived!' },
-      'ride_started': { title: 'Ride Started', body: 'Your ride has started!' },
-      'ride_completed': { title: 'Ride Completed', body: 'Your ride has completed!' },
-      'cancelled': { title: 'Ride Cancelled', body: 'Your ride was cancelled' }
-    };
-
-    if (notifications[status]) {
-      await notifyUser(booking.travelerId, {
-        ...notifications[status],
-        data: { bookingId: booking.id }
-      });
-    }
-
-    res.status(200).json({ message: 'Status updated', booking });
+    res.status(200).json(bookings);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update status', error: error.message });
+    res.status(500).json({ message: 'Failed to get bookings', error: error.message });
   }
 };
 
-// Get available shared bookings
-exports.getAvailableSharedBookings = async (req, res) => {
-  try {
-    const bookings = await TaxiBooking.findAll({
-      where: { 
-        isShared: true, 
-        status: 'pending',
-        scheduledAt: { [Op.gte]: new Date() } // Only future bookings
-      },
-      include: [{ model: Vehicle, include: [{ model: VehicleType }] }]
-    });
 
-    const available = bookings.filter(b => {
-      const availableSeats = b.Vehicle.number_of_seats - b.bookedSeats;
-      return availableSeats > 0;
-    });
 
-    res.status(200).json({ sharedBookings: available });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to get shared bookings', error: error.message });
-  }
-};
-
-// Join existing shared booking
+// Join to Exciting Shared Bookings
 exports.joinSharedBooking = async (req, res) => {
+  // const transaction = await sequelize.transaction(); // Temporarily removed transaction
   try {
     const { bookingId } = req.params;
-    const { seatsToBook } = req.body;
+    const { seatsToBook, pickupLat, pickupLng } = req.body;
 
     if (!seatsToBook || seatsToBook < 1) {
+      // await transaction.rollback();
       return res.status(400).json({ message: 'Invalid number of seats' });
     }
 
     const booking = await TaxiBooking.findByPk(bookingId, {
-      include: [{ model: Vehicle }]
+      include: [
+        { model: Vehicle, as: 'assignedVehicle'},
+      ],
+      // transaction
     });
 
-    if (!booking || !booking.isShared || booking.status !== 'pending')
+    if (!booking || !booking.isShared || booking.status !== 'pending') {
+      // await transaction.rollback();
       return res.status(404).json({ message: 'Booking unavailable' });
+    }
 
-    if (!booking.Vehicle)
-      return res.status(404).json({ message: 'Vehicle not found' });
+    // Check if booking is in the future
+    if (booking.scheduledAt && new Date(booking.scheduledAt) < new Date()) {
+      // await transaction.rollback();
+      return res.status(400).json({ message: 'This booking has already passed' });
+    }
 
-    const availableSeats = booking.Vehicle.number_of_seats - booking.bookedSeats;
-    if (seatsToBook > availableSeats)
+    // Check pickup location within 1km (shared ride rule)
+    if (pickupLat && pickupLng) {
+      const distance = calculateDistance(
+        parseFloat(pickupLat),
+        parseFloat(pickupLng),
+        booking.pickupLat,
+        booking.pickupLng
+      );
+      // if (distance > 1) {
+      //   // await transaction.rollback();
+      //   return res.status(400).json({
+      //     message: 'Pickup location must be within 1km of the original booking',
+      //   });
+      // }
+    }
+
+    const availableSeats = booking.bookedSeats - booking.seatsToBook;
+    
+    
+    if (seatsToBook > availableSeats) {
+      // await transaction.rollback();
       return res.status(400).json({ message: `Only ${availableSeats} seats available` });
+    }
 
-    // Update booking
+    // Update booking with new traveler
     booking.bookedSeats += seatsToBook;
-    booking.travelerIds = [...booking.travelerIds, req.user.id];
+    let travelerIds = booking.travelerIds;
+
+    // Fix if it's a string instead of an array
+    if (typeof travelerIds === 'string') {
+      try {
+        travelerIds = JSON.parse(travelerIds);
+      } catch (e) {
+        travelerIds = [];
+      }
+    }
+
+    // Ensure it's an array
+    if (!Array.isArray(travelerIds)) {
+      travelerIds = [];
+    }
+
+    // Add new traveler if not already in list
+    if (!travelerIds.includes(req.user.uid)) {
+      travelerIds.push(req.user.uid);
+    }
+
+    booking.travelerIds = travelerIds;
     await booking.save();
 
-    res.status(200).json({ message: 'Joined shared booking', booking });
+    // await booking.save({ transaction });
+
+    // COMMENTED: Fare split logic (not needed until payment system is active)
+    /*
+    const totalTravelers = booking.travelerIds.length;
+    const newTotalPrice = calculateFare(booking.VehicleType, booking.distance) / totalTravelers;
+    booking.totalPrice = newTotalPrice;
+    await booking.save({ transaction });
+    */
+
+    // await transaction.commit();
+    return res.status(200).json({ message: 'Joined shared booking', booking });
+
   } catch (error) {
-    res.status(500).json({ message: 'Failed to join booking', error: error.message });
+    // await transaction.rollback();
+    return res.status(500).json({ message: 'Failed to join booking', error: error.message });
   }
 };
 
-// Search available drivers near pickup location
+
+
+
+// Update payment status
+exports.updatePaymentStatus = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { bookingId } = req.params;
+    const { paymentStatus } = req.body;
+
+    const booking = await TaxiBooking.findByPk(bookingId, { transaction });
+    if (!booking) {
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Validate payment status transition
+    const validTransitions = {
+      'pending': ['paid', 'failed'],
+      'paid': ['refunded'],
+      'failed': ['pending'],
+      'refunded': [] // No transitions after refunded
+    };
+
+    if (!validTransitions[booking.paymentStatus] || 
+        !validTransitions[booking.paymentStatus].includes(paymentStatus)) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Invalid payment status transition' });
+    }
+
+    // Update payment status
+    booking.paymentStatus = paymentStatus;
+    await booking.save({ transaction });
+
+    // If payment is successful, update booking status
+    if (paymentStatus === 'paid' && booking.status === 'driver_accepted') {
+      booking.status = 'driver_arrived';
+      await booking.save({ transaction });
+      
+      // Notify driver
+      await notifyUser(booking.assignedVehicle.driverId, {
+        title: 'Payment Received',
+        body: 'Payment received for booking #' + booking.id,
+        data: { bookingId: booking.id }
+      });
+    }
+
+    await transaction.commit();
+    res.status(200).json({ message: 'Payment status updated', booking });
+  } catch (error) {
+    await transaction.rollback();
+    res.status(500).json({ message: 'Failed to update payment status', error: error.message });
+  }
+};
+
+
+// Get All Available Drivers
 exports.getAvailableDrivers = async (req, res) => {
   try {
-    const { vehicleTypeId, pickupLat, pickupLng } = req.body;
+    const { vehicleTypeId, pickupLat, pickupLng, maxDistance = 10 } = req.body;
 
     if (!vehicleTypeId || !pickupLat || !pickupLng) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -297,31 +283,39 @@ exports.getAvailableDrivers = async (req, res) => {
     const vehicles = await Vehicle.findAll({
       where: { 
         vehicleTypeId, 
-        isAvailable: true 
+        isAvailable: true,
+        currentLat: { [Op.ne]: null },
+        currentLng: { [Op.ne]: null }
       },
       include: [
         { model: User, as: 'driver' }, 
-        { model: VehicleType }
+        { model: VehicleType, as: 'vehicleType' }
       ]
     });
 
-    const nearbyVehicles = vehicles.filter(vehicle => {
-      const distance = calculateDistance(pickupLat, pickupLng, vehicle.currentLat, vehicle.currentLng);
-      return distance <= 10; // Within 10km
-    });
+    const nearbyVehicles = vehicles.map(vehicle => {
+      const distance = calculateDistance(
+        parseFloat(pickupLat), parseFloat(pickupLng),
+        vehicle.currentLat, vehicle.currentLng
+      );
+      return { ...vehicle.toJSON(), distance };
+    }).filter(vehicle => vehicle.distance <= maxDistance);
 
+    // Sort by distance and availability
+    nearbyVehicles.sort((a, b) => a.distance - b.distance);
+
+    // Format response
     const drivers = nearbyVehicles.map(vehicle => ({
+      driverId: vehicle.driver.id,
+      driverName: vehicle.driver.name,
       vehicleId: vehicle.id,
-      driverName: vehicle.driver?.name || 'Unknown',
-      driverPhone: vehicle.driver?.phone || '',
-      vehicleType: vehicle.VehicleType?.type || 'Unknown',
+      vehicleNumber: vehicle.vehicle_number,
+      vehicleType: vehicle.vehicleType.type,
       seats: vehicle.number_of_seats,
+      distance: vehicle.distance,
       currentLocation: { lat: vehicle.currentLat, lng: vehicle.currentLng },
-      distance: calculateDistance(pickupLat, pickupLng, vehicle.currentLat, vehicle.currentLng)
+      fcmToken: vehicle.fcmToken
     }));
-
-    // Sort by distance
-    drivers.sort((a, b) => a.distance - b.distance);
 
     res.status(200).json(drivers);
   } catch (error) {
@@ -329,43 +323,242 @@ exports.getAvailableDrivers = async (req, res) => {
   }
 };
 
-// Get user's booking history
-exports.getUserBookings = async (req, res) => {
+// Get nearby bookings for driver
+exports.getNearbyBookings = async (req, res) => {
   try {
-    const bookings = await TaxiBooking.findAll({
-      where: { travelerId: req.user.id },
+    const driverId = req.user.uid;
+    
+    // Get driver's vehicle and current location
+    const vehicle = await Vehicle.findOne({ 
+      where: { driver_id: driverId },
       include: [
-        { model: Vehicle, as: 'vehicle', include: [{ model: User, as: 'driver' }] },
         { model: VehicleType, as: 'vehicleType' }
-      ],
-      order: [['createdAt', 'DESC']]
+      ]
     });
 
-    res.status(200).json(bookings);
+    if (!vehicle || !vehicle.currentLat || !vehicle.currentLng) {
+      return res.status(400).json({ message: 'Driver location not available' });
+    }
+
+    console.log('Driver vehicle found:', vehicle);
+
+    // Find bookings within 10km of driver's location and matching vehicleTypeId from the Vehicle model
+    const bookings = await TaxiBooking.findAll({
+      where: { 
+        status: 'pending',
+        [Op.or]: [
+          { vehicleId: null }, // Allow for shared rides without a vehicle assigned
+          { vehicleId: vehicle.id } // Only include bookings for the driver's assigned vehicle
+        ]
+      },
+      include: [
+        { model: User, as: 'traveler' },
+        {
+          model: Vehicle, 
+          as: 'assignedVehicle',
+          include: [
+            { model: VehicleType, as: 'vehicleType' }
+          ]
+        }
+      ]
+    });
+
+    console.log('Fetched bookings:', bookings.length);
+
+    // Filter bookings based on vehicleTypeId (from Vehicle model) and distance
+    const nearbyBookings = bookings.filter(booking => {
+      const distance = calculateDistance(
+        vehicle.currentLat, vehicle.currentLng,
+        booking.pickupLat, booking.pickupLng
+      );
+
+      console.log('Checking booking distance:', distance, 'for booking:', booking.id);
+      console.log('Driver location:', vehicle.currentLat, vehicle.currentLng);
+      console.log('Booking pickup location:', booking.pickupLat, booking.pickupLng);
+
+      // If the distance is 0 (same location), treat it as a valid nearby booking
+      if (distance === 0) {
+        return true;
+      }
+
+      // Allow bookings within a 10km radius and matching vehicleTypeId
+      return (
+        distance <= 10 &&
+        booking.assignedVehicle && 
+        booking.assignedVehicle.vehicleTypeId === vehicle.vehicleTypeId
+      );
+    }).map(booking => {
+      const distance = calculateDistance(
+        vehicle.currentLat, vehicle.currentLng,
+        booking.pickupLat, booking.pickupLng
+      );
+      return { ...booking.toJSON(), distanceFromDriver: distance };
+    });
+
+    console.log('Nearby bookings found:', nearbyBookings.length);
+
+    // Sort by distance and creation time
+    nearbyBookings.sort((a, b) => a.distanceFromDriver - b.distanceFromDriver || 
+                                 new Date(b.createdAt) - new Date(a.createdAt));
+
+    if (nearbyBookings.length === 0) {
+      console.log('No nearby bookings found');
+    }
+
+    res.status(200).json(nearbyBookings);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to get bookings', error: error.message });
+    console.error('Error fetching nearby bookings:', error);
+    res.status(500).json({ message: 'Failed to get nearby bookings', error: error.message });
   }
 };
 
-// Get driver's bookings
-exports.getDriverBookings = async (req, res) => {
+
+
+// Get accepted booking details
+exports.getAcceptedBooking = async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOne({ where: { driverId: req.user.id } });
+    const { bookingId } = req.params;
+    
+    // Fetch the booking with associated models
+    const booking = await TaxiBooking.findByPk(bookingId, {
+      include: [
+        { model: User, as: 'traveler' },
+        { 
+          model: Vehicle, 
+          as: 'assignedVehicle', 
+          include: [
+            { model: User, as: 'driver' },
+            { model: VehicleType, as: 'vehicleType' }
+          ]
+        }
+      ]
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    console.log("Booking Data:", booking); // Log the booking data for debugging
+
+    // Find the driver's vehicle
+    const vehicle = await Vehicle.findOne({
+      where: { driver_id: req.user.uid },
+    });
+
     if (!vehicle) {
       return res.status(404).json({ message: 'Driver vehicle not found' });
     }
 
-    const bookings = await TaxiBooking.findAll({
-      where: { vehicleId: vehicle.id },
-      include: [
-        { model: User, as: 'traveler' },
-        { model: VehicleType, as: 'vehicleType' }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+    // Update the booking with the driver's vehicle ID
+    booking.vehicleId = vehicle.id;
+    await booking.save(); // Save the updated booking
 
-    res.status(200).json(bookings);
+    console.log("Updated Booking with Vehicle ID:", booking); // Log the updated booking
+
+    res.status(200).json(booking); // Return the updated booking
   } catch (error) {
-    res.status(500).json({ message: 'Failed to get bookings', error: error.message });
+    res.status(500).json({ message: 'Failed to get booking', error: error.message });
+  }
+};
+
+
+
+
+// update booking status
+exports.updateTaxiBookingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { bookingId } = req.params;
+    
+    // Fetch the booking with associated models
+    const booking = await TaxiBooking.findByPk(bookingId, {
+      include: [
+        { 
+          model: Vehicle, 
+          as: 'assignedVehicle', 
+          include: [
+            { model: User, as: 'driver' },
+            { model: VehicleType, as: 'vehicleType' }
+          ]
+        }
+      ]
+    });
+    
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    const vehicle = booking.assignedVehicle;
+    if (!vehicle || vehicle.driver_id !== req.user.uid) {
+      return res.status(403).json({ message: 'Unauthorized to update this booking' });
+    }
+    
+    
+
+    // Define allowed status transitions
+    const validTransitions = {
+      'pending': ['driver_accepted', 'cancelled'],
+      'driver_accepted': ['driver_arrived', 'cancelled'],
+      'driver_arrived': ['ride_started', 'cancelled'],
+      'ride_started': ['ride_completed'],
+      'ride_completed': [],
+    };
+
+    // if (!validTransitions[booking.status]?.includes(status)) {
+    //   return res.status(400).json({ message: 'Invalid status transition' });
+    // }
+
+    // Update status and timestamps
+    booking.status = status;
+
+    if (status === 'ride_started') {
+      booking.startedAt = new Date();
+    } else if (status === 'ride_completed') {
+      booking.completedAt = new Date();
+
+      // Mark vehicle as available
+      await Vehicle.update(
+        { isAvailable: true },
+        { where: { id: booking.vehicleId } }
+      );
+    }
+
+    await booking.save();
+
+    // Notification logic
+    const notifications = {
+      'driver_accepted': { title: 'Driver Accepted', body: 'Your driver is coming!' },
+      'driver_arrived': { title: 'Driver Arrived', body: 'Your driver has arrived!' },
+      'ride_started': { title: 'Ride Started', body: 'Your ride has started!' },
+      'ride_completed': {
+        title: 'Ride Completed',
+        body: `Your ride has completed! Total fare: ${booking.totalPrice}`,
+        data: {
+          bookingId: booking.id,
+          fare: booking.totalPrice,
+          distance: booking.distance
+        }
+      },
+      'cancelled': { title: 'Ride Cancelled', body: 'Your ride was cancelled' }
+    };
+
+    if (notifications[status]) {
+      await notifyUser(booking.travelerId, notifications[status]);
+
+      if (booking.isShared && booking.travelerIds) {
+        const travelerIds = JSON.parse(booking.travelerIds);
+        await Promise.all(
+          travelerIds.map(id =>
+            id !== booking.travelerId ? notifyUser(id, notifications[status]) : Promise.resolve()
+          )
+        );
+      }
+    }
+
+    res.status(200).json({ message: 'Status updated', booking });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update status', error: error.message });
   }
 };
