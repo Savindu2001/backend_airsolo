@@ -401,9 +401,9 @@ exports.getNearbyBookings = async (req, res) => {
     nearbyBookings.sort((a, b) => a.distanceFromDriver - b.distanceFromDriver || 
                                  new Date(b.createdAt) - new Date(a.createdAt));
 
-    if (nearbyBookings.length === 0) {
-      console.log('No nearby bookings found');
-    }
+    // if (nearbyBookings.length === 0) {
+    //   console.log('No nearby bookings found');
+    // }
 
     res.status(200).json(nearbyBookings);
   } catch (error) {
@@ -411,6 +411,58 @@ exports.getNearbyBookings = async (req, res) => {
     res.status(500).json({ message: 'Failed to get nearby bookings', error: error.message });
   }
 };
+
+
+
+
+
+// Get history of bookings for driver
+exports.getHistoryBookings = async (req, res) => {
+  try {
+    const driverId = req.user.uid;
+    
+    // Get driver's vehicle
+    const vehicle = await Vehicle.findOne({ 
+      where: { driver_id: driverId },
+      include: [
+        { model: VehicleType, as: 'vehicleType' }
+      ]
+    });
+
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found for this driver' });
+    }
+
+    const bookings = await TaxiBooking.findAll({
+      where: { 
+        status: ['ride_completed', 'cancelled'],
+        vehicleId: vehicle.id
+      },
+      include: [
+        { model: User, as: 'traveler'},
+        {
+          model: Vehicle, 
+          as: 'assignedVehicle',
+          include: [
+            { model: VehicleType, as: 'vehicleType'}
+          ]
+        }
+      ],
+      order: [['completed_at', 'DESC']] // Show most recent first
+    });
+
+    console.log(`Fetched ${bookings.length} history bookings for driver ${driverId}`);
+
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching history bookings:', error);
+    res.status(500).json({ 
+      message: 'Failed to get history bookings', 
+      error: error.message 
+    });
+  }
+};
+
 
 
 
@@ -454,6 +506,14 @@ exports.getAcceptedBooking = async (req, res) => {
     await booking.save(); // Save the updated booking
 
     console.log("Updated Booking with Vehicle ID:", booking); // Log the updated booking
+
+    // firebase
+    // if (process.env.USE_FIREBASE === 'true') {
+    //   await admin.firestore().collection('bookings').doc(bookingId).update({
+    //     status: 'driver_accepted',
+    //     updatedAt: new Date()
+    //   });
+    // }
 
     res.status(200).json(booking); // Return the updated booking
   } catch (error) {
@@ -556,9 +616,55 @@ exports.updateTaxiBookingStatus = async (req, res) => {
       }
     }
 
+    // firebase
+    // if (process.env.USE_FIREBASE === 'true') {
+    //   await admin.firestore().collection('bookings').doc(bookingId).update({
+    //     status: status,
+    //     updatedAt: new Date()
+    //   });
+    // }
+
     res.status(200).json({ message: 'Status updated', booking });
 
   } catch (error) {
     res.status(500).json({ message: 'Failed to update status', error: error.message });
+  }
+};
+
+
+exports.getBookingStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const booking = await TaxiBooking.findByPk(bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    
+    res.status(200).json({ status: booking.status });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get status', error: error.message });
+  }
+};
+
+
+exports.getBookingDetails = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const booking = await TaxiBooking.findByPk(bookingId, {
+      include: [
+        { model: User, as: 'traveler' },
+        { 
+          model: Vehicle, 
+          as: 'assignedVehicle', 
+          include: [
+            { model: User, as: 'driver' },
+            { model: VehicleType, as: 'vehicleType' }
+          ]
+        }
+      ]
+    });
+    
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.status(200).json(booking);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get details', error: error.message });
   }
 };

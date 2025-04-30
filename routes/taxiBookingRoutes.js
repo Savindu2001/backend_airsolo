@@ -16,8 +16,11 @@ router.get('/all', authenticateJWT, taxiBookingController.getAllTaxiBookings);
 
 // Driver
 router.get('/driver-nearby', authenticateJWT, taxiBookingController.getNearbyBookings);
+router.get('/taxiBooking-history', authenticateJWT, taxiBookingController.getHistoryBookings);
 router.get('/driver-accept/:bookingId', authenticateJWT, taxiBookingController.getAcceptedBooking);
 
+router.get('/status/:bookingId', authenticateJWT, taxiBookingController.getBookingStatus);
+router.get('/details/:bookingId', authenticateJWT, taxiBookingController.getBookingDetails);
 
 
 module.exports = router;
