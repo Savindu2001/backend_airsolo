@@ -465,6 +465,37 @@ exports.getHistoryBookings = async (req, res) => {
 
 
 
+// Get history of bookings for travelers
+exports.getTravelerHistoryBookings = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+
+    const bookings = await TaxiBooking.findAll({
+      where: { 
+        status: ['ride_completed', 'cancelled'],
+        
+      },
+      include: [
+        { model: User, as: 'traveler'},
+        
+      ],
+      order: [['completed_at', 'DESC']]
+    });
+
+
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching history bookings:', error);
+    res.status(500).json({ 
+      message: 'Failed to get history bookings', 
+      error: error.message 
+    });
+  }
+};
+
+
+
 
 // Get accepted booking details
 exports.getAcceptedBooking = async (req, res) => {

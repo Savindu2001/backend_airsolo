@@ -21,6 +21,6 @@ router.get('/driver-accept/:bookingId', authenticateJWT, taxiBookingController.g
 
 router.get('/status/:bookingId', authenticateJWT, taxiBookingController.getBookingStatus);
 router.get('/details/:bookingId', authenticateJWT, taxiBookingController.getBookingDetails);
-
+router.get('/traveler-history', authenticateJWT, taxiBookingController.getTravelerHistoryBookings);
 
 module.exports = router;
